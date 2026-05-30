@@ -1,23 +1,29 @@
-/* ====== NAVBAR ====== */
+:root {
+  --nav-height: 64px;
+}
+
+/* ── Base Navbar Strip ──────────────────────────────────────── */
 .navbar {
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 3%;
+  padding: 0 4%;
+  height: var(--nav-height);
   background: var(--nav-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 1px 0 var(--border-color);
   position: sticky;
   top: 0;
-  z-index: 100;
-  gap: 15px;
+  z-index: 200;
+  gap: 16px;
   box-sizing: border-box;
   transition: background 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
 }
 
-/* --- Logo --- */
+/* ── Logo ───────────────────────────────────────────────────── */
 .nav-logo {
   display: flex;
   align-items: center;
@@ -25,85 +31,92 @@
   flex-shrink: 0;
 }
 
+.nav-logo img {
+  height: 32px;
+  width: auto;
+}
+
 .nav-logo p {
   color: var(--primary-color);
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.5px;
   white-space: nowrap;
+  margin: 0;
 }
 
-/* --- Search Bar --- */
+/* ── Search Bar ─────────────────────────────────────────────── */
 .nav-search {
   display: flex;
   align-items: center;
-  flex: 1; /* Allows the entire search block to expand/shrink dynamically */
-  max-width: 400px; /* Caps the maximum width on wide desktop screens */
-  min-width: 200px; /* Ensures it never becomes too small on tablet ranges */
+  flex: 1;
+  max-width: 420px;
+  min-width: 0;
   height: 40px;
-  position: relative;
-  overflow: hidden;
   background: var(--background-light);
   border: 1.5px solid var(--border-color);
   border-radius: 10px;
   transition: border-color 0.2s, background 0.3s;
-  padding: 0 4px 0 16px;
-  gap: 8px;
+  padding: 0 4px 0 12px;
+  gap: 6px;
+  box-sizing: border-box;
 }
 
 .nav-search:focus-within {
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .nav-search-icon {
-  font-size: 16px;
-  color: var(--text-muted);
   flex-shrink: 0;
-  line-height: 1;
+  color: var(--text-muted);
+  display: block;
 }
 
 .nav-search input {
-  flex: 1; /* Dynamically absorbs whatever space is left over by the button */
-  width: 100%;
-  min-width: 0; /* CRITICAL: Breaks default browser block input constraints so it can shrink */
-  padding-left: 15px;
+  flex: 1;
+  min-width: 0;
   height: 100%;
   border: none;
   outline: none;
-  font-size: 15px;
+  font-size: 14px;
   font-family: 'Outfit', sans-serif;
   color: var(--text-main);
   background: transparent;
 }
 
-.nav-search input::placeholder { color: var(--text-muted); }
+.nav-search input::placeholder {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .nav-search input:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
   -webkit-text-fill-color: var(--text-main);
 }
 
 .nav-search button:not(.nav-search-clear) {
-  flex-shrink: 0; /* Absolute guarantee that the button never narrows down */
-  width: 90px; /* Gives the button a stable, static width footprint */
-  height: 100%;
+  flex-shrink: 0;
+  width: 80px;
+  height: 32px;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #6366f1, #a855f7);
-  color: white;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   border-radius: 7px;
   transition: opacity 0.2s, box-shadow 0.2s;
   font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
 }
 
 .nav-search button:not(.nav-search-clear):hover {
-  opacity: 0.9;
-  box-shadow: 0 0 16px rgba(99, 102, 241, 0.55);
+  opacity: 0.88;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.5);
 }
 
 .nav-search-clear {
@@ -123,19 +136,26 @@
   color: var(--accent-color);
 }
 
-/* --- Right Section --- */
+/* ── Right Controls ─────────────────────────────────────────── */
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
   flex-shrink: 0;
 }
 
-/* --- Nav Menu Links --- */
+/* Utility actions cluster — Aura, theme, profile, cart, hamburger */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── Desktop Nav Links ──────────────────────────────────────── */
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -147,14 +167,18 @@
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  color: var(--text-main);
   font-size: 15px;
   font-weight: 500;
-  transition: color 0.2s ease;
-  position: relative;
+  white-space: nowrap;
 }
 
-.nav-menu li:hover {
+.nav-menu li a {
+  text-decoration: none;
+  color: var(--text-main);
+  transition: color 0.2s ease;
+}
+
+.nav-menu li:hover a {
   color: var(--accent-color);
 }
 
@@ -164,71 +188,35 @@
   height: 2.5px;
   border-radius: 10px;
   background: linear-gradient(90deg, #6366f1, #a855f7);
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  margin: 0;
 }
 
-.nav-menu a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* --- Login + Cart --- */
-.nav-login-cart {
+/* ── Ask Aura Button ────────────────────────────────────────── */
+.nav-aura-btn {
   display: flex;
   align-items: center;
-  gap: 20px;
-}
-
-.nav-login-cart button {
-  padding: 9px 22px;
-  border: 1.5px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid rgba(99, 102, 241, 0.5);
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--accent-color, #6366f1);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  color: var(--text-main);
-  transition: var(--transition-smooth);
   white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
 }
 
-.nav-login-cart button:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+.nav-aura-btn:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: #6366f1;
 }
 
-.nav-profile {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.nav-profile-name {
-  font-weight: 600;
-  color: var(--text-main);
-  font-size: 15px;
-}
-
-.nav-cart-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.nav-cart-wrapper img {
-  width: 26px;
-  cursor: pointer;
-}
-
-.nav-cart-icon {
-  transition: filter 0.3s ease;
-}
-
-[data-theme="dark"] .nav-cart-icon {
-  filter: invert(1);
-}
-
+/* ── Dark Mode Toggle ───────────────────────────────────────── */
 .nav-darkmode-toggle {
   background: none;
   border: 1.5px solid var(--border-color);
@@ -246,86 +234,73 @@
   background: var(--border-color);
 }
 
-.nav-cart-count {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
+/* ── Login + Cart ───────────────────────────────────────────── */
+.nav-login-cart {
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--accent-color);
-  color: white;
+  gap: 16px;
 }
 
 .nav-login-btn {
-  padding: 9px 22px;
-  border: 1.5px solid #ccc;
-  border-radius: 4px;
-  background: white;
+  padding: 8px 18px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: transparent;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   color: var(--text-main);
-  transition: var(--transition-smooth);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
 }
 
 .nav-login-btn:hover {
   background: var(--primary-color);
-  color: white;
+  color: #ffffff;
   border-color: var(--primary-color);
 }
 
+/* ── Profile Avatar + Dropdown ──────────────────────────────── */
 .nav-profile-wrapper {
   position: relative;
 }
 
 .nav-avatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-color), #a855f7);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-color, #6366f1), #a855f7);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
   font-family: 'Inter', sans-serif;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s;
 }
 
 .nav-avatar:hover {
-  transform: scale(1.08);
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
 }
 
 .nav-dropdown {
   position: absolute;
-  top: calc(100% + 14px);
+  top: calc(100% + 12px);
   right: 0;
   width: 250px;
-  background: rgba(18, 18, 22, 0.85);
+  background: rgba(18, 18, 22, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   padding: 8px;
-  z-index: 1000;
-  animation: dropdown-appear 0.2s ease;
-}
-
-@keyframes dropdown-appear {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  z-index: 500;
 }
 
 .nav-dropdown-header {
@@ -334,7 +309,7 @@
   gap: 12px;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255, 255, 255, 0.07);
   margin-bottom: 4px;
 }
 
@@ -342,8 +317,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-color), #a855f7);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-color, #6366f1), #a855f7);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -365,7 +340,7 @@
 
 .nav-dropdown-email {
   font-size: 11px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
   margin: 2px 0 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -375,7 +350,7 @@
 
 .nav-dropdown-divider {
   height: 1px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   margin: 6px 4px;
 }
 
@@ -386,13 +361,13 @@
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   transition: background 0.18s ease, color 0.18s ease;
 }
 
 .nav-dropdown-item:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
@@ -423,129 +398,215 @@
   color: #ff6b6b;
 }
 
-/* --- Responsive --- */
+/* ── Cart ───────────────────────────────────────────────────── */
+.nav-cart-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nav-cart-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: filter 0.3s ease;
+}
+
+[data-theme="dark"] .nav-cart-icon {
+  filter: invert(1);
+}
+
+.nav-cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent-color, #6366f1);
+  color: #ffffff;
+}
+
+/* ── Hamburger — hidden on desktop ─────────────────────────── */
 .nav-hamburger {
   display: none;
   flex-direction: column;
   justify-content: space-between;
   width: 24px;
-  height: 16px;
+  height: 18px;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
-  z-index: 101;
+  z-index: 250;
   flex-shrink: 0;
-  margin-left: 10px;
 }
 
 .nav-hamburger span {
+  display: block;
   width: 100%;
   height: 2.5px;
   background-color: var(--text-main);
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.nav-hamburger.active span:nth-child(1) {
-  transform: translateY(6.5px) rotate(45deg);
+.nav-hamburger.active span:nth-child(1) { transform: translateY(7.75px) rotate(45deg); }
+.nav-hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-hamburger.active span:nth-child(3) { transform: translateY(-7.75px) rotate(-45deg); }
+
+/* ── Mobile Backdrop ────────────────────────────────────────── */
+.mobile-menu-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: var(--nav-height);
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 195;
+  cursor: pointer;
 }
 
-.nav-hamburger.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.nav-hamburger.active span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
+/* ── Mobile Drawer (fixed, sibling to <nav>) ────────────────── */
 .nav-menu-dropdown {
-  display: none; /* Ensure that the mobile menu container wrapper has an explicit display: none; rule on desktop resolutions */
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  padding: 16px 0;
-  background: var(--nav-bg);
-  border-top: 1px solid var(--border-color);
+  display: none;
   list-style: none;
   margin: 0;
-  order: 4;
+  padding: 8px 0 16px;
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  z-index: 196;
+  background: var(--nav-bg, #111115);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  flex-direction: column;
 }
 
-.nav-menu-dropdown li {
-  font-size: 16px;
+.nav-menu-dropdown li { width: 100%; box-sizing: border-box; }
+
+.nav-menu-dropdown li a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 28px;
+  font-size: 17px;
   font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
-}
-
-.nav-menu-dropdown li:hover {
-  background: var(--background-light);
-  color: var(--accent-color);
-}
-
-.nav-menu-dropdown a {
+  color: var(--text-main, #f0f0f0);
   text-decoration: none;
-  color: inherit;
-  display: block;
+  transition: background 0.18s ease, color 0.18s ease, padding-left 0.18s ease;
+  box-sizing: border-box;
 }
 
-@media (max-width: 1024px) {
-  .navbar { padding: 12px 20px; }
+.nav-menu-dropdown li a:hover {
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  padding-left: 36px;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE BREAKPOINTS
+───────────────────────────────────────────────────────────── */
+
+/* Tablet — wide (769px to 1100px) */
 @media (max-width: 1100px) and (min-width: 769px) {
-  .navbar {
-    gap: 10px;
-    padding: 12px 20px;
-  }
-  .nav-menu {
-    gap: 12px;
-    font-size: 14px;
-  }
-  .nav-right {
-    gap: 10px;
-  }
-  .nav-login-cart {
-    gap: 10px;
-  }
-  .nav-search {
-    max-width: 300px;
-  }
-  /* If the search box and menus still squeeze icons, scale down text components slightly */
-  .nav-menu p {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 768px) {
-  .navbar { flex-wrap: wrap; }
-  .nav-logo { order: 1; }
-  .nav-right { order: 2; }
-  .nav-search { order: 3; max-width: 100%; width: 100%; margin-top: 10px; }
+  .navbar { gap: 12px; padding: 0 3%; }
+  .nav-menu { gap: 16px; }
+  .nav-right { gap: 12px; }
+  .nav-login-cart { gap: 10px; }
+  .nav-search { max-width: 300px; }
+  .nav-aura-btn { padding: 6px 10px; font-size: 12px; }
   .nav-logo p { font-size: 22px; }
-  .nav-dropdown { right: -10px; }
-  .nav-hamburger { display: flex; }
-  .nav-menu { display: none; }
-  .nav-menu-dropdown {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 70px;
-    width: 100%;
-    background-color: #1a1a1a;
-    z-index: 999;
-  }
 }
 
+/* Tablet — compact (≤768px): hamburger visible, desktop menu hidden */
+@media (max-width: 768px) {
+  :root { --nav-height: 60px; }
+
+  .navbar { padding: 0 5%; gap: 12px; flex-wrap: nowrap; }
+
+  .nav-hamburger { display: flex; }
+  .nav-menu { display: none !important; }
+  .mobile-menu-backdrop { display: block; }
+  .nav-menu-dropdown { display: flex; }
+
+  .nav-search { flex: 1; min-width: 0; max-width: none; }
+  .nav-right { gap: 10px; }
+  .nav-logo p { font-size: 20px; }
+  .nav-cart-icon { width: 22px; height: 22px; }
+  .nav-dropdown { right: -8px; }
+}
+
+/* Mobile — phone (≤600px): search bar on its own row; logo/actions space-between */
+@media (max-width: 600px) {
+  :root { --nav-height: auto; }
+
+  .navbar {
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 4%;
+    gap: 0;
+    height: auto;
+    row-gap: 8px;
+  }
+
+  /* Logo: row 1, left */
+  .nav-logo { order: 1; flex-shrink: 0; }
+
+  /* nav-right: row 1, right — spans remaining space so space-between works */
+  .nav-right {
+    order: 2;
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0;
+  }
+
+  /* Actions cluster: tight, even gap between all icons */
+  .nav-actions { gap: 12px; }
+
+  /* Search bar: row 2, full width */
+  .nav-search {
+    order: 3;
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 4px 0 6px;
+    height: 40px;
+  }
+
+  /* Drawer offset accounts for 2-row navbar (~56px row + 52px search) */
+  .mobile-menu-backdrop,
+  .nav-menu-dropdown { top: 112px; }
+
+  .nav-logo p { font-size: 18px; }
+  .nav-logo img { height: 26px; }
+  .nav-darkmode-toggle { padding: 5px 8px; font-size: 14px; }
+  .nav-avatar { width: 32px; height: 32px; font-size: 12px; }
+  .nav-cart-icon { width: 21px; height: 21px; }
+  .nav-dropdown { right: -12px; width: 220px; }
+  .nav-menu-dropdown li a { font-size: 17px; padding: 15px 24px; }
+}
+
+/* Exceptionally narrow (≤430px): collapse Aura button to icon-only */
+@media (max-width: 430px) {
+  .aura-label { display: none; }
+  .nav-aura-btn { padding: 7px 9px; gap: 0; }
+  .nav-actions { gap: 10px; }
+  .nav-login-cart { gap: 10px; }
+}
+
+/* Safety overrides — desktop always wins */
 @media (min-width: 769px) {
-  .nav-menu-dropdown {
-    display: none !important; /* Forces the mobile overlay layout to clear instantly on desktop scales */
-  }
-  .nav-menu {
-    display: flex !important; /* Re-establishes inline list text elements seamlessly */
-  }
+  .nav-hamburger { display: none !important; }
+  .mobile-menu-backdrop { display: none !important; }
+  .nav-menu-dropdown { display: none !important; }
+  .nav-menu { display: flex !important; }
 }

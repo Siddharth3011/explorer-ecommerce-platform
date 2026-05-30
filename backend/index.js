@@ -7,7 +7,7 @@ const productRoutes = require('./routes/productRoutes');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
 app.use(express.json());

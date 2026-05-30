@@ -10,7 +10,7 @@ export const Footer = () => {
         <div className='footer-brand'>
           <div className='footer-logo-wrap'>
             <img src={footer_logo} alt='logo' />
-            <span>SHOPPER</span>
+            <span>EXPLORER</span>
           </div>
           <p className='footer-tagline'>The destination for premium fashion. Curated for the modern wardrobe.</p>
           <div className='footer-socials'>
@@ -59,7 +59,7 @@ export const Footer = () => {
       </div>
 
       <div className='footer-bottom'>
-        <p>© 2026 Shopper. All rights reserved.</p>
+        <p>© 2026 Explorer. All rights reserved.</p>
         <div className='footer-bottom-links'>
           <a href='/'>Privacy Policy</a>
           <a href='/'>Terms of Use</a>
