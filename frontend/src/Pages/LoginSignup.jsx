@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ShopContext } from '../Context/ShopContext';
 import './LoginSignup.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://explorer-backend.vercel.app';
@@ -7,6 +9,11 @@ export const LoginSignup = () => {
   const [state, setState] = useState("Login");
   const [otpSent, setOtpSent] = useState(false);
   const [formData, setFormData] = useState({ username: "", email: "", otp: "" });
+
+  const { getUser, mergeGuestCart, cartItems } = useContext(ShopContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.from?.pathname || '/';
 
   const changeHandler = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,6 +28,9 @@ export const LoginSignup = () => {
   const handleVerifyOtp = async () => {
     if (formData.otp !== "123456") return alert("Incorrect OTP. Use 123456.");
 
+    // Capture guest cart before login overwrites state
+    const guestCart = { ...cartItems };
+
     const endpoint = state === "Login" ? "/login" : "/signup";
     const body = state === "Login"
       ? { email: formData.email, password: "otp_verified" }
@@ -34,8 +44,12 @@ export const LoginSignup = () => {
     }).then((r) => r.json()).then((d) => responseData = d);
 
     if (responseData.success) {
-      localStorage.setItem('auth-token', responseData.token);
-      window.location.replace("/");
+      const token = responseData.token;
+      localStorage.setItem('auth-token', token);
+      // getUser overwrites cartItems with DB data; mergeGuestCart then pushes guest items on top
+      await getUser(token);
+      await mergeGuestCart(guestCart, token);
+      navigate(returnTo, { replace: true });
     } else {
       alert(responseData.errors);
     }

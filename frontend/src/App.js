@@ -12,6 +12,7 @@ import { Settings } from './Pages/Settings';
 import { Wishlist } from './Pages/Wishlist';
 import { Checkout } from './Pages/Checkout';
 import { ToastProvider } from './Components/Toast/Toast';
+import { ProtectedRoute } from './Components/ProtectedRoute';
 
 function App() {
   return (
@@ -27,13 +28,13 @@ function App() {
             <Route path="/product" element={<Product />}>
               <Route path=':productId' element={<Product />} />
             </Route>
-            <Route path='/cart' element={<Cart />} />
-            <Route path='/checkout' element={<Checkout />} />
+            <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path='/login' element={<LoginSignup />} />
-            <Route path='/profile' element={<Profile />} />
-            <Route path='/orders' element={<MyOrders />} />
-            <Route path='/settings' element={<Settings />} />
-            <Route path='/wishlist' element={<Wishlist />} />
+            <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path='/orders' element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+            <Route path='/settings' element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path='/wishlist' element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
           </Routes>
         </ToastProvider>
       </BrowserRouter>

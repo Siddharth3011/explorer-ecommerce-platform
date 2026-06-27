@@ -8,6 +8,7 @@ const ShopContextProvider = (props) => {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [user, setUser] = useState({ name: '', email: '', date: null, loggedIn: false });
+  const [userLoading, setUserLoading] = useState(!!localStorage.getItem('auth-token'));
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
@@ -38,6 +39,7 @@ const ShopContextProvider = (props) => {
   }, [darkMode]);
 
   const getUser = async (token) => {
+    setUserLoading(true);
     try {
       const response = await fetch(`${API_BASE}/getuser`, {
         method: 'POST',
@@ -46,43 +48,70 @@ const ShopContextProvider = (props) => {
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        if (response.status === 401) localStorage.removeItem('auth-token');
+        return;
+      }
+
       const data = await response.json();
       if (data.success) {
         setUser({ name: data.name, email: data.email, date: data.date, loggedIn: true });
-        // Restore cart items from database
+
         fetch(`${API_BASE}/getcart`, {
           method: 'POST',
-          headers: {
-            'auth-token': token,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'auth-token': token, 'Content-Type': 'application/json' },
         })
           .then((res) => res.json())
-          .then((cartData) => {
-            if (cartData) setCartItems(cartData);
-          })
-          .catch((err) => console.error("Error retrieving user cart:", err));
+          .then((cartData) => { if (cartData) setCartItems(cartData); })
+          .catch((err) => console.error('Cart restore error:', err));
 
-        // Restore wishlist items from database
         fetch(`${API_BASE}/getwishlist`, {
           method: 'POST',
-          headers: {
-            'auth-token': token,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'auth-token': token, 'Content-Type': 'application/json' },
         })
           .then((res) => res.json())
           .then((wishlistData) => {
-            if (wishlistData) {
-              const wishlistIds = Object.keys(wishlistData).map(Number);
-              setWishlist(wishlistIds);
-            }
+            if (wishlistData) setWishlist(Object.keys(wishlistData).map(Number));
           })
-          .catch((err) => console.error("Error retrieving user wishlist:", err));
+          .catch((err) => console.error('Wishlist restore error:', err));
       }
     } catch (err) {
-      console.error("Failed to fetch user:", err);
+      console.error('getUser fetch failed:', err);
+    } finally {
+      setUserLoading(false);
     }
+  };
+
+  // Pushes guest cart entries into the DB, then re-fetches to produce a merged cart.
+  const mergeGuestCart = async (guestCart, token) => {
+    const entries = Object.entries(guestCart).filter(([, qty]) => qty > 0);
+    if (!entries.length) return;
+
+    await Promise.all(
+      entries.map(([key, qty]) => {
+        const [itemId, size] = key.split('_');
+        // Fire one request per unit so the backend counter increments correctly
+        return Promise.all(
+          Array.from({ length: qty }, () =>
+            fetch(`${API_BASE}/addtocart`, {
+              method: 'POST',
+              headers: { 'auth-token': token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ itemId: Number(itemId), size }),
+            })
+          )
+        );
+      })
+    );
+
+    // Re-fetch the authoritative merged cart from the DB
+    fetch(`${API_BASE}/getcart`, {
+      method: 'POST',
+      headers: { 'auth-token': token, 'Content-Type': 'application/json' },
+    })
+      .then((res) => res.json())
+      .then((cartData) => { if (cartData) setCartItems(cartData); })
+      .catch((err) => console.error('Merged cart fetch error:', err));
   };
 
   const addToCart = (itemId, size) => {
@@ -183,6 +212,9 @@ const ShopContextProvider = (props) => {
     getTotalCartItems,
     user,
     setUser,
+    userLoading,
+    getUser,
+    mergeGuestCart,
     darkMode,
     setDarkMode,
     wishlist,

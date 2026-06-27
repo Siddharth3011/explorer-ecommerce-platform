@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ShopContext } from '../Context/ShopContext';
 import './Profile.css';
 
@@ -37,11 +38,36 @@ const ProfileSkeleton = () => (
 );
 
 export const Profile = () => {
-  const { user } = useContext(ShopContext);
+  const { user, userLoading } = useContext(ShopContext);
+  const navigate = useNavigate();
+  const [timedOut, setTimedOut] = useState(false);
 
-  if (!user.loggedIn && !user.name) {
-    return <ProfileSkeleton />;
+  // Safety net: if the user fetch takes more than 6s, break the skeleton loop
+  useEffect(() => {
+    if (!userLoading) return;
+    const id = setTimeout(() => setTimedOut(true), 6000);
+    return () => clearTimeout(id);
+  }, [userLoading]);
+
+  if (timedOut && !user.loggedIn) {
+    return (
+      <div className="profile-page">
+        <div className="profile-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <p style={{ fontSize: 18, color: 'var(--text-muted)' }}>
+            ⚠️ Could not load profile. Please{' '}
+            <span
+              style={{ color: 'var(--accent-color)', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => navigate('/login')}
+            >
+              log in again
+            </span>.
+          </p>
+        </div>
+      </div>
+    );
   }
+
+  if (userLoading) return <ProfileSkeleton />;
 
   return (
     <div className="profile-page">
