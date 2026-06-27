@@ -16,7 +16,6 @@ export const NewsLetter = () => {
   return (
     <div className='newsletter'>
       <div className='newsletter-inner'>
-        <span className='newsletter-tag'>Join 50,000+ shoppers</span>
         <h1>Get Exclusive Deals & Drops</h1>
         <p>Subscribe to our newsletter. No spam, unsubscribe anytime.</p>
         {submitted ? (

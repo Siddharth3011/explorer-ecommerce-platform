@@ -277,7 +277,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the SHOpper marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state items. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in context.`;
+const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state items. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in context.`;
 
 app.post('/api/ai/chat', async (req, res) => {
   const { messages, cartItems } = req.body;

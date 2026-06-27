@@ -1,1 +1,41 @@
+# ==========================================
+# ROOT SPECIFIC CONFIG
+# ==========================================
+.vercel
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# BACKEND CONFIG
+# ==========================================
+backend/.env
+backend/node_modules/
+backend/.vercel
+
+# ==========================================
+# FRONTEND CONFIG
+# ==========================================
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Testing
+frontend/coverage
+
+# Production Build
+frontend/build/
+
+# Misc & Local Environments
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.vercel
+
+#other files
 INTERVIEW_PREP.md
+FLOW_GUIDE.md

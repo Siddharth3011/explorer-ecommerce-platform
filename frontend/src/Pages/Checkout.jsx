@@ -303,7 +303,7 @@ export const Checkout = () => {
               Order Confirmed!
             </motion.h2>
             <motion.p className="checkout-confirm-sub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
-              Thank you for shopping with Shopper. Your items are being prepared.
+              Thank you for shopping with Explorer. Your items are being prepared.
             </motion.p>
             <motion.div className="checkout-order-ref" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
               <span>Order Reference</span>

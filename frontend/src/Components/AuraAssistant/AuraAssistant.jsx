@@ -41,7 +41,7 @@ const MessageBubble = ({ msg }) => (
 export const AuraAssistant = ({ isOpen, onClose }) => {
   const { all_product, cartItems } = useContext(ShopContext);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! I'm Aura, your SHOpper AI. Ask me anything about style, products, or your cart — I've got you covered. 🛖" },
+    { role: 'assistant', content: "Hi! I'm Aura, your explorer AI. Ask me anything about style, products, or your cart — I've got you covered. 🛖" },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -121,7 +121,7 @@ export const AuraAssistant = ({ isOpen, onClose }) => {
                 <div className="aura-logo">A</div>
                 <div>
                   <p className="aura-title">Aura AI</p>
-                  <p className="aura-subtitle">Your SHOpper assistant</p>
+                  <p className="aura-subtitle">Your explorer assistant</p>
                 </div>
               </div>
               <button className="aura-close-btn" onClick={onClose} aria-label="Close">

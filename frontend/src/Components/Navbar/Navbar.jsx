@@ -82,7 +82,7 @@ export const Navbar = () => {
 
         {/* ── Row 1: Logo ──────────────────────────────── */}
         <div className="nav-logo">
-          <img src={logo} alt="SHOPPER logo" />
+          <img src={logo} alt="Explorer logo" />
           <Link to='/' onClick={() => handleNavLink('shop')}>
             <p>EXPLORER</p>
           </Link>
