@@ -130,6 +130,33 @@ app.post('/getuser', fetchUser, async (req, res) => {
 });
 
 const Order = require('./models/Order');
+const Razorpay = require('razorpay');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
+});
+
+app.post('/api/payment/orders', fetchUser, async (req, res) => {
+  try {
+    const options = {
+      amount: req.body.amount * 100, // amount in smallest currency unit (paise)
+      currency: "INR",
+      receipt: "receipt_order_" + Date.now(),
+    };
+    try {
+      const order = await razorpay.orders.create(options);
+      if (!order) return res.status(500).json({ success: false, message: 'Razorpay order creation failed' });
+      res.json({ success: true, order });
+    } catch (razorpayError) {
+      console.error("Razorpay SDK Error:", razorpayError);
+      res.status(500).json({ success: false, message: 'Failed to initialize payment gateway' });
+    }
+  } catch (error) {
+    console.error("Payment route error:", error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
 
 app.post('/placeorder', fetchUser, async (req, res) => {
   console.log("Order Data Received:", req.body);

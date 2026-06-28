@@ -60,9 +60,14 @@ export const AuraAssistant = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const buildCartPayload = () => {
-    return all_product
-      .filter(p => cartItems[p.id] > 0)
-      .map(p => ({ name: p.name, qty: cartItems[p.id], price: p.new_price }));
+    return Object.entries(cartItems)
+      .filter(([, qty]) => qty > 0)
+      .map(([key, qty]) => {
+        const [idStr, size] = key.split('_');
+        const product = all_product.find(p => p.id === Number(idStr));
+        return product ? { name: `${product.name} (Size: ${size})`, qty, price: product.new_price } : null;
+      })
+      .filter(Boolean);
   };
 
   const sendMessage = async (text) => {

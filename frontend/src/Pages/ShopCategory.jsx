@@ -1,7 +1,7 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import './ShopCategory.css';
 import { ShopContext } from '../Context/ShopContext';
-import dropdown_icon from '../Components/Assets/dropdown_icon.png';
+
 import { Item } from '../Components/Item/Item';
 import { Footer } from '../Components/Footer/Footer';
 import banner_mens from '../Components/Assets/banner_mens.png';
@@ -14,15 +14,7 @@ const no_results_icon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2
 export const ShopCategory = (props) => {
   const { all_product, searchQuery, setSearchQuery } = useContext(ShopContext);
   const [visibleCount, setVisibleCount] = useState(8);
-  const [searchExecuted, setSearchExecuted] = useState(false);
 
-  useEffect(() => {
-    if (searchQuery.trim() !== "") {
-      setSearchExecuted(true);
-    } else {
-      setSearchExecuted(false);
-    }
-  }, [searchQuery]);
 
   let banner;
   if (props.category === 'men') banner = banner_mens;
@@ -48,7 +40,7 @@ export const ShopCategory = (props) => {
         <img src={no_results_icon} alt="No Results" />
         <h2>No results found</h2>
         <p>Try adjusting your search criteria.</p>
-        <button onClick={() => { setSearchExecuted(false); clearSearch(); }}>Clear Search</button>
+        <button onClick={() => { clearSearch(); }}>Clear Search</button>
       </div>
     );
   }

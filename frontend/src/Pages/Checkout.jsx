@@ -1,54 +1,30 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShopContext } from '../Context/ShopContext';
 import './Checkout.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://explorer-backend.vercel.app';
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || 'dummy_key';
 
-const generateOrderId = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return 'ORD-' + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
-const CARD_TYPES = {
-  visa: /^4/,
-  mastercard: /^5[1-5]/,
-  amex: /^3[47]/,
-};
-
-const detectCard = (num) => {
-  const clean = num.replace(/\D/g, '');
-  if (CARD_TYPES.visa.test(clean)) return 'VISA';
-  if (CARD_TYPES.mastercard.test(clean)) return 'MC';
-  if (CARD_TYPES.amex.test(clean)) return 'AMEX';
-  return '';
-};
-
-const formatCard = (val) => {
-  const clean = val.replace(/\D/g, '').slice(0, 16);
-  return clean.replace(/(.{4})/g, '$1 ').trim();
-};
-
-const formatExpiry = (val) => {
-  const clean = val.replace(/\D/g, '').slice(0, 4);
-  if (clean.length >= 3) return `${clean.slice(0, 2)}/${clean.slice(2)}`;
-  return clean;
+const loadScript = (src) => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 };
 
 export const Checkout = () => {
   const { all_product, cartItems, getTotalCartAmount } = useContext(ShopContext);
-  const [step, setStep] = useState('form');
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [orderId, setOrderId] = useState('');
   const [errors, setErrors] = useState({});
 
   const [shipping, setShipping] = useState({
     fullName: '', email: '', phone: '', address: '', city: '', pincode: '', state: '',
-  });
-
-  const [card, setCard] = useState({
-    number: '', name: '', expiry: '', cvv: '',
   });
 
   const cartLines = Object.entries(cartItems)
@@ -71,10 +47,6 @@ export const Checkout = () => {
     if (!shipping.city.trim()) e.city = 'Required';
     if (!shipping.pincode.match(/^\d{6}$/)) e.pincode = '6-digit PIN required';
     if (!shipping.state.trim()) e.state = 'Required';
-    if (card.number.replace(/\s/g, '').length < 16) e.cardNumber = 'Invalid card number';
-    if (!card.name.trim()) e.cardName = 'Required';
-    if (!card.expiry.match(/^\d{2}\/\d{2}$/)) e.expiry = 'MM/YY format';
-    if (!card.cvv.match(/^\d{3,4}$/)) e.cvv = 'Invalid CVV';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -83,57 +55,104 @@ export const Checkout = () => {
     if (!validateForm()) return;
     setLoading(true);
     const token = localStorage.getItem('auth-token');
-    const orderRef = generateOrderId();
 
     try {
-      const response = await fetch(`${API_BASE}/placeorder`, {
-        method: 'POST',
-        headers: {
-          'auth-token': token || '',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          orderId: orderRef,
-          address: shipping,
-          items: cartLines.map(({ product, size, qty }) => ({
-            productId: product.id,
-            name: product.name,
-            image: product.image,
-            price: product.new_price,
-            qty: qty,
-            size: size
-          })),
-          amount: total
-        }),
-      });
-      const data = await response.json();
-      setLoading(false);
-      if (data.success) {
-        setOrderId(orderRef);
-        setStep('confirmed');
-      } else {
-        alert(data.message || 'Failed to place order');
+      const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+      if (!res) {
+        setLoading(false);
+        return alert('Razorpay SDK failed to load. Are you online?');
       }
+
+      // Initialize Razorpay Order via Backend
+      const orderResponse = await fetch(`${API_BASE}/api/payment/orders`, {
+        method: 'POST',
+        headers: { 'auth-token': token || '', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total }),
+      });
+      const orderData = await orderResponse.json();
+
+      if (!orderData.success) {
+        setLoading(false);
+        return alert('Failed to initialize payment');
+      }
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: "INR",
+        name: "Explorer E-Commerce",
+        description: "Test Transaction",
+        order_id: orderData.order.id,
+        handler: async function (response) {
+          try {
+            // Once payment succeeds, hit placeorder to save DB document and clear cart
+            const placeOrderRes = await fetch(`${API_BASE}/placeorder`, {
+              method: 'POST',
+              headers: { 'auth-token': token || '', 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: response.razorpay_payment_id,
+                address: shipping,
+                items: cartLines.map(({ product, size, qty }) => ({
+                  productId: product.id,
+                  name: product.name,
+                  image: product.image,
+                  price: product.new_price,
+                  qty: qty,
+                  size: size
+                })),
+                amount: total
+              }),
+            });
+            const data = await placeOrderRes.json();
+            setLoading(false);
+            if (data.success) {
+              // Immediately terminate execution and redirect securely to orders dashboard
+              navigate('/orders', { replace: true });
+            } else {
+              alert(data.message || 'Failed to record order in database');
+            }
+          } catch (err) {
+            setLoading(false);
+            console.error('Save order error:', err);
+            alert('Payment succeeded but order saving failed.');
+          }
+        },
+        prefill: {
+          name: shipping.fullName,
+          email: shipping.email,
+          contact: shipping.phone,
+        },
+        theme: {
+          color: "#000000",
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+          }
+        }
+      };
+      
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
     } catch (err) {
       setLoading(false);
-      console.error(err);
-      alert('Failed to place order');
+      console.error('Checkout pipeline error:', err);
+      alert('An error occurred during checkout');
     }
   };
 
   return (
     <div className="checkout-page">
       <AnimatePresence mode="wait">
-        {step === 'form' && (
-          <motion.div
-            key="form"
-            className="checkout-layout"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          >
-            <div className="checkout-left">
+        <motion.div
+          key="form"
+          className="checkout-layout"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+        >
+          <div className="checkout-left">
               <h2 className="checkout-section-title">Shipping Details</h2>
               <div className="checkout-form-grid">
                 {[
@@ -182,69 +201,6 @@ export const Checkout = () => {
                   </div>
                 ))}
               </div>
-
-              <h2 className="checkout-section-title" style={{ marginTop: 40 }}>Payment</h2>
-              <div className="checkout-card-panel">
-                <div className="checkout-card-preview">
-                  <div className="checkout-card-chip" />
-                  <p className="checkout-card-number-preview">
-                    {card.number || '•••• •••• •••• ••••'}
-                  </p>
-                  <div className="checkout-card-bottom">
-                    <span>{card.name || 'CARD HOLDER'}</span>
-                    <span>{card.expiry || 'MM/YY'}</span>
-                  </div>
-                  <div className="checkout-card-type">{detectCard(card.number)}</div>
-                </div>
-
-                <div className="checkout-form-grid checkout-card-inputs">
-                  <div className="checkout-field checkout-field--full">
-                    <label>Card Number</label>
-                    <input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      value={card.number}
-                      onChange={(e) => setCard({ ...card, number: formatCard(e.target.value) })}
-                      className={errors.cardNumber ? 'checkout-input--error' : ''}
-                    />
-                    {errors.cardNumber && <span className="checkout-error">{errors.cardNumber}</span>}
-                  </div>
-                  <div className="checkout-field checkout-field--full">
-                    <label>Name on Card</label>
-                    <input
-                      type="text"
-                      placeholder="SIDDHARTH PANDEY"
-                      value={card.name}
-                      onChange={(e) => setCard({ ...card, name: e.target.value.toUpperCase() })}
-                      className={errors.cardName ? 'checkout-input--error' : ''}
-                    />
-                    {errors.cardName && <span className="checkout-error">{errors.cardName}</span>}
-                  </div>
-                  <div className="checkout-field">
-                    <label>Expiry</label>
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      value={card.expiry}
-                      onChange={(e) => setCard({ ...card, expiry: formatExpiry(e.target.value) })}
-                      className={errors.expiry ? 'checkout-input--error' : ''}
-                    />
-                    {errors.expiry && <span className="checkout-error">{errors.expiry}</span>}
-                  </div>
-                  <div className="checkout-field">
-                    <label>CVV</label>
-                    <input
-                      type="password"
-                      placeholder="•••"
-                      maxLength={4}
-                      value={card.cvv}
-                      onChange={(e) => setCard({ ...card, cvv: e.target.value.replace(/\D/g, '') })}
-                      className={errors.cvv ? 'checkout-input--error' : ''}
-                    />
-                    {errors.cvv && <span className="checkout-error">{errors.cvv}</span>}
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="checkout-right">
@@ -281,40 +237,6 @@ export const Checkout = () => {
               <p className="checkout-secure-note">🔒 Secured by 256-bit SSL encryption</p>
             </div>
           </motion.div>
-        )}
-
-        {step === 'confirmed' && (
-          <motion.div
-            key="confirmed"
-            className="checkout-confirmation"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, type: 'spring', stiffness: 200, damping: 22 }}
-          >
-            <motion.div
-              className="checkout-confirm-check"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 20 }}
-            >
-              ✓
-            </motion.div>
-            <motion.h2 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-              Order Confirmed!
-            </motion.h2>
-            <motion.p className="checkout-confirm-sub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
-              Thank you for shopping with Explorer. Your items are being prepared.
-            </motion.p>
-            <motion.div className="checkout-order-ref" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-              <span>Order Reference</span>
-              <strong>{orderId}</strong>
-            </motion.div>
-            <motion.div className="checkout-confirm-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-              <Link to='/'><button className="checkout-shop-more-btn">Continue Shopping</button></Link>
-              <Link to='/orders'><button className="checkout-track-btn">Track Order</button></Link>
-            </motion.div>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );

@@ -111,7 +111,7 @@ export const Navbar = () => {
         {/* ── Row 1: Right side ─────────────────────────── */}
         <div className="nav-right">
           {/* Desktop nav links — hidden on mobile via CSS */}
-          <ul className="nav-menu" role="list">
+          <ul className="nav-menu">
             {[
               { key: 'shop', to: '/', label: 'Shop' },
               { key: 'mens', to: '/mens', label: 'Men' },
