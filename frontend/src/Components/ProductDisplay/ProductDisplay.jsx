@@ -13,8 +13,11 @@ export const ProductDisplay = (props) => {
   const [selectedSize, setSelectedSize] = useState('');
   const { showToast } = useToast();
 
-  const filledStars = Math.round(product.rating || 4);
+  const hasReviews = (product.numReviews || 0) > 0;
+  const filledStars = hasReviews ? Math.round(product.rating) : 0;
   const reviewCount = product.numReviews || 0;
+  const stock = product.stock ?? 10;
+  const isOutOfStock = stock === 0;
 
   return (
     <div className='productdisplay fade-in'>
@@ -33,21 +36,33 @@ export const ProductDisplay = (props) => {
       <div className="productdisplay-right">
         <h1>{product.name}</h1>
 
-        <div className="productdisplay-right-stars">
-          {Array.from({ length: 5 }, (_, i) => (
-            <img
-              key={i}
-              src={i < filledStars ? star_icon : star_dull_icon}
-              alt={i < filledStars ? 'star' : 'dull star'}
-            />
-          ))}
-          <p>({reviewCount})</p>
-        </div>
+        {hasReviews ? (
+          <div className="productdisplay-right-stars">
+            {Array.from({ length: 5 }, (_, i) => (
+              <img
+                key={i}
+                src={i < filledStars ? star_icon : star_dull_icon}
+                alt={i < filledStars ? 'star' : 'dull star'}
+              />
+            ))}
+            <p>({reviewCount})</p>
+          </div>
+        ) : (
+          <p className="productdisplay-no-reviews">No reviews yet</p>
+        )}
 
         <div className="productdisplay-right-prices">
           <div className="productdisplay-right-price-old">₹{product.old_price}</div>
           <div className="productdisplay-right-price-new">₹{product.new_price}</div>
         </div>
+
+        {isOutOfStock ? (
+          <p className="productdisplay-stock productdisplay-stock--out">Out of Stock</p>
+        ) : stock <= 5 ? (
+          <p className="productdisplay-stock productdisplay-stock--low">⚠ Only {stock} left in stock! Running out fast!</p>
+        ) : (
+          <p className="productdisplay-stock productdisplay-stock--in">✓ In Stock ({stock} left)</p>
+        )}
 
         <div className="productdisplay-right-description">
           {product.description || 'A lightweight, usually knitted, pullover shirt, close-fitting and with a round neckline and short sleeves, worn as an undershirt or outer garment.'}
@@ -60,7 +75,7 @@ export const ProductDisplay = (props) => {
               <div
                 key={size}
                 className={selectedSize === size ? 'size-active' : ''}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => !isOutOfStock && setSelectedSize(size)}
               >
                 {size}
               </div>
@@ -69,7 +84,10 @@ export const ProductDisplay = (props) => {
         </div>
 
         <button
+          disabled={isOutOfStock}
+          style={isOutOfStock ? { opacity: 0.45, cursor: 'not-allowed' } : {}}
           onClick={() => {
+            if (isOutOfStock) return;
             if (!selectedSize) {
               showToast('Please select a size first!', 'error');
               return;
@@ -78,7 +96,7 @@ export const ProductDisplay = (props) => {
             showToast(`${product.name} (Size: ${selectedSize}) added to cart successfully!`, 'success');
           }}
         >
-          ADD TO CART
+          {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
         </button>
 
         <p className='productdisplay-right-category'><span>Category :</span> {product.category}, T-Shirt, Crop Top</p>

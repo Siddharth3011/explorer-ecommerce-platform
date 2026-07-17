@@ -144,6 +144,38 @@
   color: var(--primary-color);
 }
 
+.productdisplay-no-reviews {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.productdisplay-stock {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  padding: 7px 14px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.productdisplay-stock--in {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.productdisplay-stock--low {
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.productdisplay-stock--out {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
 @media (max-width: 1280px) {
   .productdisplay {
     margin: 0 10%;

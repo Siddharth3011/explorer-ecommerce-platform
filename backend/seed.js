@@ -28,7 +28,8 @@ const seedData = async () => {
 
     arrayString = arrayString.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
     
-    const products = new Function('return ' + arrayString)();
+    const rawProducts = new Function('return ' + arrayString)();
+    const products = rawProducts.map(p => ({ ...p, stock: p.stock ?? 10 }));
 
     await Product.deleteMany({});
     await Product.insertMany(products);

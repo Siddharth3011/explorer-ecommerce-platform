@@ -42,6 +42,12 @@ const productSchema = new mongoose.Schema({
     type: Array,
     default: [],
   },
+  stock: {
+    type: Number,
+    required: true,
+    default: 10,
+    min: 0,
+  },
   date: {
     type: Date,
     default: Date.now,
