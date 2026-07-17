@@ -16,8 +16,7 @@ export const Item = ({ id, name, image, new_price, old_price, numReviews, rating
   const isWishlisted = wishlist.includes(id);
 
   const handleAddToCart = () => {
-    addToCart(id);
-    showToast(`${name} added to your cart successfully!`, 'success');
+    addToCart(id, undefined, showToast);
   };
 
   const handleWishlist = () => {

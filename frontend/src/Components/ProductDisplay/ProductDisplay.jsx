@@ -92,7 +92,7 @@ export const ProductDisplay = (props) => {
               showToast('Please select a size first!', 'error');
               return;
             }
-            addToCart(product.id, selectedSize);
+            addToCart(product.id, selectedSize, showToast);
             showToast(`${product.name} (Size: ${selectedSize}) added to cart successfully!`, 'success');
           }}
         >

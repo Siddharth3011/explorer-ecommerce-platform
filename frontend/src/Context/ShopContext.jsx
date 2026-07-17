@@ -114,22 +114,38 @@ const ShopContextProvider = (props) => {
       .catch((err) => console.error('Merged cart fetch error:', err));
   };
 
-  const addToCart = (itemId, size) => {
+  const addToCart = (itemId, size, showToast) => {
     const finalSize = size || 'M';
     const key = `${itemId}_${finalSize}`;
-    setCartItems((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+
+    const product = products.find((p) => p.id === itemId);
+    const currentQty = cartItems[key] || 0;
+
+    if (product && currentQty >= product.stock) {
+      if (showToast) showToast('Cannot add more items. Maximum stock limit reached.', 'error');
+      return;
+    }
+
+    setCartItems((prev) => ({ ...prev, [key]: currentQty + 1 }));
+
     if (localStorage.getItem('auth-token')) {
       fetch(`${API_BASE}/addtocart`, {
         method: 'POST',
         headers: {
-          'auth-token': `${localStorage.getItem('auth-token')}`,
+          'auth-token': localStorage.getItem('auth-token'),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ itemId: itemId, size: finalSize }),
+        body: JSON.stringify({ itemId, size: finalSize }),
       })
-        .then((response) => response.json())
-        .then((data) => console.log(data))
-        .catch((error) => console.error("Error adding to cart:", error));
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) {
+            // Rollback optimistic update if backend rejects
+            setCartItems((prev) => ({ ...prev, [key]: Math.max((prev[key] || 1) - 1, 0) }));
+            if (showToast) showToast(data.message || 'Could not add item to cart.', 'error');
+          }
+        })
+        .catch((err) => console.error('Error adding to cart:', err));
     }
   };
 

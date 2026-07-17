@@ -159,32 +159,51 @@ app.post('/api/payment/orders', fetchUser, async (req, res) => {
 });
 
 app.post('/placeorder', fetchUser, async (req, res) => {
-  console.log("Order Data Received:", req.body);
   try {
     const userId = req.user.id;
     const { orderId, address, items, amount } = req.body;
-    
-    const newOrder = new Order({
-      userId,
-      orderId,
-      address,
-      items,
-      amount,
-    });
-    
+
+    // --- Atomic stock validation and reservation ---
+    const reserved = [];
+    for (const item of items) {
+      const updated = await Product.findOneAndUpdate(
+        { id: item.productId, stock: { $gte: item.qty } },
+        { $inc: { stock: -item.qty } },
+        { new: true }
+      );
+
+      if (!updated) {
+        // Roll back all already-decremented items before aborting
+        for (const r of reserved) {
+          await Product.findOneAndUpdate({ id: r.productId }, { $inc: { stock: r.qty } });
+        }
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock available for "${item.name}". Please update your cart and try again.`,
+        });
+      }
+      reserved.push({ productId: item.productId, qty: item.qty });
+    }
+
+    // --- Persist order and clear cart ---
+    const newOrder = new Order({ userId, orderId, address, items, amount });
     try {
       await newOrder.save();
     } catch (saveError) {
-      console.error("Database save failed. Required fields missing or validation error:", saveError.message);
-      return res.status(400).json({ success: false, message: 'Database validation failed', error: saveError.message });
+      // Roll back stock if order document save fails
+      for (const r of reserved) {
+        await Product.findOneAndUpdate({ id: r.productId }, { $inc: { stock: r.qty } });
+      }
+      console.error('DB save error:', saveError.message);
+      return res.status(400).json({ success: false, message: 'Order validation failed', error: saveError.message });
     }
-    
+
     const user = await User.findById(userId);
     if (user) {
       user.cartData = {};
       await user.save();
     }
-    
+
     res.json({ success: true, message: 'Order placed successfully' });
   } catch (error) {
     console.error('Order placement error:', error);
@@ -207,20 +226,32 @@ app.post('/addtocart', fetchUser, async (req, res) => {
     const { itemId, size } = req.body;
     const finalSize = size || 'M';
     const key = `${itemId}_${finalSize}`;
-    
-    let userData = await User.findById(req.user.id);
-    if (!userData.cartData) {
-      userData.cartData = {};
+
+    const [userData, product] = await Promise.all([
+      User.findById(req.user.id),
+      Product.findOne({ id: itemId }),
+    ]);
+
+    if (!userData) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!userData.cartData) userData.cartData = {};
+
+    const currentQty = userData.cartData[key] || 0;
+
+    if (product && currentQty >= product.stock) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot add more. Only ${product.stock} unit(s) in stock for this item.`,
+      });
     }
-    
-    userData.cartData[key] = (userData.cartData[key] || 0) + 1;
+
+    userData.cartData[key] = currentQty + 1;
     userData.markModified('cartData');
     await userData.save();
-    
-    res.json({ success: true, message: "Added to Cart" });
+
+    res.json({ success: true, message: 'Added to Cart' });
   } catch (error) {
-    console.error("Cart add error:", error);
-    res.status(500).json({ success: false, message: "Cart add error" });
+    console.error('Cart add error:', error);
+    res.status(500).json({ success: false, message: 'Cart add error' });
   }
 });
 
