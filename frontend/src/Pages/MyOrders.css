@@ -174,3 +174,206 @@
   color: #6366f1 !important;
   margin: 0;
 }
+
+/* ── Rate & Review button ─────────────────────────────── */
+.myorders-review-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid #6366f1;
+  background: transparent;
+  color: #6366f1;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.myorders-review-btn:hover {
+  background: #6366f1;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.myorders-review-btn--active {
+  background: #f1f0fe;
+  color: #4f46e5;
+  border-color: #a5b4fc;
+}
+
+/* ── Inline review drawer ─────────────────────────────── */
+.review-drawer {
+  margin: 0 0 8px;
+  border-top: 1px solid #e9ecef;
+  background: #fafbff;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.review-form {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-form-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.review-form-title span {
+  color: #6366f1;
+}
+
+.review-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-form-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+/* ── Star selector ── */
+.review-stars-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.review-star-btn {
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #d1d5db;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.review-star-btn:hover,
+.review-star-btn--active {
+  color: #f59e0b;
+  transform: scale(1.18);
+}
+
+.review-rating-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+/* ── Textarea ── */
+.review-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: #1e293b;
+  background: white;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  min-height: 80px;
+}
+
+.review-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.review-char-count {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+  margin: 0;
+}
+
+/* ── Action buttons ── */
+.review-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.review-cancel-btn {
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.review-cancel-btn:hover {
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.review-submit-btn {
+  padding: 10px 26px;
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.review-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.review-submit-btn:disabled,
+.review-cancel-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 600px) {
+  .myorders-card-item {
+    flex-wrap: wrap;
+  }
+
+  .myorders-review-btn {
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .review-form {
+    padding: 16px;
+  }
+
+  .review-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .review-cancel-btn,
+  .review-submit-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
