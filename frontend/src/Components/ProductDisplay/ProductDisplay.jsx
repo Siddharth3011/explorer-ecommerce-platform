@@ -1,11 +1,13 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import './ProductDisplay.css';
 import star_icon from '../Assets/star_icon.png';
 import star_dull_icon from '../Assets/star_dull_icon.png';
 import { ShopContext } from '../../Context/ShopContext';
 import { useToast } from '../Toast/Toast';
+import { io } from 'socket.io-client';
 
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+const SOCKET_URL = process.env.REACT_APP_API_URL || 'https://explorer-backend.vercel.app';
 
 export const ProductDisplay = (props) => {
   const { product } = props;
@@ -13,10 +15,38 @@ export const ProductDisplay = (props) => {
   const [selectedSize, setSelectedSize] = useState('');
   const { showToast } = useToast();
 
-  const hasReviews = (product.numReviews || 0) > 0;
-  const filledStars = hasReviews ? Math.round(product.rating) : 0;
-  const reviewCount = product.numReviews || 0;
-  const stock = product.stock ?? 10;
+  // Live review state — seeded from prop, updated via socket
+  const [liveRating, setLiveRating]       = useState(product.rating || 0);
+  const [liveNumReviews, setLiveNumReviews] = useState(product.numReviews || 0);
+  const [liveTopReviews, setLiveTopReviews] = useState(product.reviews?.slice(-5).reverse() || []);
+
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    // Reset live state when navigating to a different product
+    setLiveRating(product.rating || 0);
+    setLiveNumReviews(product.numReviews || 0);
+    setLiveTopReviews(product.reviews?.slice(-5).reverse() || []);
+  }, [product.id]);
+
+  useEffect(() => {
+    socketRef.current = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+
+    socketRef.current.on('review_updated', (data) => {
+      if (data.productId === product.id) {
+        setLiveRating(data.rating);
+        setLiveNumReviews(data.numReviews);
+        setLiveTopReviews(data.topReviews || []);
+        showToast('A new review was just posted for this product!', 'info');
+      }
+    });
+
+    return () => socketRef.current?.disconnect();
+  }, [product.id]);
+
+  const hasReviews  = liveNumReviews > 0;
+  const filledStars = hasReviews ? Math.round(liveRating) : 0;
+  const stock       = product.stock ?? 10;
   const isOutOfStock = stock === 0;
 
   return (
@@ -36,6 +66,7 @@ export const ProductDisplay = (props) => {
       <div className="productdisplay-right">
         <h1>{product.name}</h1>
 
+        {/* ── Stars & review count ── */}
         {hasReviews ? (
           <div className="productdisplay-right-stars">
             {Array.from({ length: 5 }, (_, i) => (
@@ -45,10 +76,22 @@ export const ProductDisplay = (props) => {
                 alt={i < filledStars ? 'star' : 'dull star'}
               />
             ))}
-            <p>({reviewCount})</p>
+            <p>({liveNumReviews}) &nbsp;·&nbsp; {liveRating.toFixed(1)} / 5</p>
           </div>
         ) : (
           <p className="productdisplay-no-reviews">No reviews yet</p>
+        )}
+
+        {/* ── Live top reviews snippet ── */}
+        {liveTopReviews.length > 0 && (
+          <div className="productdisplay-top-reviews">
+            {liveTopReviews.slice(0, 2).map((r, i) => (
+              <div key={i} className="productdisplay-review-chip">
+                <span className="review-chip-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                <span className="review-chip-text">"{r.review}"</span>
+              </div>
+            ))}
+          </div>
         )}
 
         <div className="productdisplay-right-prices">

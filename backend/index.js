@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./db/db');
@@ -7,6 +9,7 @@ const productRoutes = require('./routes/productRoutes');
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_ecom';
 
@@ -24,6 +27,19 @@ app.use(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'auth-token'],
 }));
+
+// Attach Socket.io to the HTTP server with matching CORS config
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+  socket.on('disconnect', () => console.log(`Socket disconnected: ${socket.id}`));
+});
 
 connectDB();
 
@@ -92,18 +108,28 @@ app.post('/login', async (req, res) => {
 app.post('/addreview', async (req, res) => {
   const { productId, rating, review } = req.body;
   const product = await Product.findOne({ id: productId });
-  
-  if (product) {
-    const newReview = { rating: Number(rating), review };
-    product.reviews.push(newReview);
-    product.numReviews = product.reviews.length;
-    product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
-    
-    await product.save();
-    res.json({ success: true, message: "Review added successfully" });
-  } else {
-    res.json({ success: false, message: "Product not found" });
+
+  if (!product) {
+    return res.json({ success: false, message: 'Product not found' });
   }
+
+  const newReview = { rating: Number(rating), review };
+  product.reviews.push(newReview);
+  product.numReviews = product.reviews.length;
+  product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
+
+  await product.save();
+
+  // Emit real-time update to all connected clients
+  io.emit('review_updated', {
+    productId: product.id,
+    rating: product.rating,
+    numReviews: product.numReviews,
+    latestReview: newReview,
+    topReviews: product.reviews.slice(-5).reverse(),
+  });
+
+  res.json({ success: true, message: 'Review added successfully' });
 });
 
 const fetchUser = (req, res, next) => {
@@ -338,7 +364,7 @@ const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state items. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in context.`;
 
 app.post('/api/ai/chat', async (req, res) => {
-  const { messages, cartItems } = req.body;
+  const { messages, cartItems, productContext } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Invalid messages array' });
   }
@@ -347,17 +373,31 @@ app.post('/api/ai/chat', async (req, res) => {
     ? `\n\nUser's current cart items: ${cartItems.map(i => `${i.name} x${i.qty} (₹${i.price})`).join(', ')}`
     : '\n\nUser cart is currently completely empty.';
 
+  // Inject live product review context when user is on a product page
+  let productReviewContext = '';
+  if (productContext) {
+    const { name, rating, numReviews, topReviews } = productContext;
+    productReviewContext = `\n\nCurrently viewed product: "${name}"` +
+      (numReviews > 0
+        ? ` — Average rating: ${rating.toFixed(1)}/5 stars across ${numReviews} review(s).` +
+          (topReviews?.length
+            ? ` Recent customer feedback: ${topReviews.map(r => `"${r.review}" (${r.rating}★)`).join('; ')}.`
+            : '')
+        : ' — No customer reviews yet.');
+  }
+
+  const AURA_SYSTEM_EXTENDED = AURA_SYSTEM +
+    `\n\nWhen asked about a product, naturally reference its live rating score and customer sentiment from reviews. Quote specific feedback when relevant. If no reviews exist, acknowledge that and offer general advice.`;
+
   const userText = messages[messages.length - 1]?.content || '';
 
   try {
-    const dynamicModel = ai.getGenerativeModel({ 
+    const dynamicModel = ai.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      systemInstruction: AURA_SYSTEM + cartContext 
+      systemInstruction: AURA_SYSTEM_EXTENDED + cartContext + productReviewContext,
     });
 
-    // Strategy: Double Try-Catch Net
     try {
-      // Primary Attempt: Try full multi-turn chat sequence
       const chatHistory = messages.slice(0, -1).map((m) => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
@@ -370,10 +410,8 @@ app.post('/api/ai/chat', async (req, res) => {
       const response = await result.response;
       return res.json({ message: response.text() });
     } catch (chatError) {
-      console.warn("⚠️ Chat history session failed, activating standalone fallback:", chatError.message);
-      
-      // Secondary Attempt: Fall back immediately to an error-free standalone single-turn response
-      const standalonePrompt = `System Context: ${AURA_SYSTEM}\n${cartContext}\n\nUser Message: ${userText}`;
+      console.warn('⚠️ Chat history session failed, activating standalone fallback:', chatError.message);
+      const standalonePrompt = `System Context: ${AURA_SYSTEM_EXTENDED}\n${cartContext}${productReviewContext}\n\nUser Message: ${userText}`;
       const fallbackResult = await dynamicModel.generateContent(standalonePrompt);
       const fallbackResponse = await fallbackResult.response;
       return res.json({ message: fallbackResponse.text() });
@@ -384,10 +422,10 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
-app.listen(PORT, (error) => {
+server.listen(PORT, (error) => {
   if (!error) {
     console.log(`Server running smoothly on Port ${PORT}`);
   } else {
-    console.log("Error spinning up server: " + error);
+    console.log('Error spinning up server: ' + error);
   }
 });

@@ -38,7 +38,7 @@ const MessageBubble = ({ msg }) => (
   </motion.div>
 );
 
-export const AuraAssistant = ({ isOpen, onClose }) => {
+export const AuraAssistant = ({ isOpen, onClose, product }) => {
   const { all_product, cartItems } = useContext(ShopContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm Aura, your explorer AI. Ask me anything about style, products, or your cart — I've got you covered. 🛖" },
@@ -64,10 +64,20 @@ export const AuraAssistant = ({ isOpen, onClose }) => {
       .filter(([, qty]) => qty > 0)
       .map(([key, qty]) => {
         const [idStr, size] = key.split('_');
-        const product = all_product.find(p => p.id === Number(idStr));
-        return product ? { name: `${product.name} (Size: ${size})`, qty, price: product.new_price } : null;
+        const p = all_product.find(p => p.id === Number(idStr));
+        return p ? { name: `${p.name} (Size: ${size})`, qty, price: p.new_price } : null;
       })
       .filter(Boolean);
+  };
+
+  const buildProductContext = () => {
+    if (!product) return null;
+    return {
+      name: product.name,
+      rating: product.rating || 0,
+      numReviews: product.numReviews || 0,
+      topReviews: (product.reviews || []).slice(-3).reverse(),
+    };
   };
 
   const sendMessage = async (text) => {
@@ -87,6 +97,7 @@ export const AuraAssistant = ({ isOpen, onClose }) => {
         body: JSON.stringify({
           messages: newHistory.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', content: m.content })),
           cartItems: buildCartPayload(),
+          productContext: buildProductContext(),
         }),
       });
       const data = await res.json();
