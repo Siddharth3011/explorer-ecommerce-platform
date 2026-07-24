@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+const reviewSchema = new mongoose.Schema({
+  userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  name:      { type: String, default: 'Anonymous' },
+  rating:    { type: Number, default: 0, min: 0, max: 5 },
+  comment:   { type: String, default: '' },
+  mediaUrl:  { type: String, default: '' },
+  mediaType: { type: String, enum: ['image', 'video', ''], default: '' },
+  date:      { type: Date, default: Date.now },
+});
+
 const productSchema = new mongoose.Schema({
   id: {
     type: Number,
@@ -39,7 +49,7 @@ const productSchema = new mongoose.Schema({
     default: 0,
   },
   reviews: {
-    type: Array,
+    type: [reviewSchema],
     default: [],
   },
   stock: {

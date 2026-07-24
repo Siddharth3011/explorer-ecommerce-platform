@@ -341,3 +341,246 @@
     border-radius: 24px;
   }
 }
+
+/* ══ Customer Reviews & Ratings Section ══════════════════════ */
+.pd-reviews-section {
+  margin: 60px 170px 80px;
+  padding-top: 40px;
+  border-top: 2px solid var(--border-color);
+}
+
+.pd-reviews-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.pd-reviews-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.pd-reviews-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 16px;
+}
+
+.pd-reviews-avg {
+  font-size: 28px;
+  font-weight: 700;
+  color: #f59e0b;
+  line-height: 1;
+}
+
+.pd-reviews-count {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pd-review-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Empty state ── */
+.pd-reviews-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 16px;
+}
+
+.pd-reviews-empty-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.pd-reviews-empty p {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+/* ── Review cards grid ── */
+.pd-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.pd-review-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s;
+}
+
+.pd-review-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* ── Card header row ── */
+.pd-review-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-reviewer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pd-reviewer-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd-reviewer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-reviewer-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.pd-review-card-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.pd-review-score {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ── Comment ── */
+.pd-review-comment,
+.review-text {
+  font-size: 14px;
+  color: var(--secondary-color);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Media ── */
+.pd-review-img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: zoom-in;
+  transition: opacity 0.2s;
+}
+
+.pd-review-img:hover {
+  opacity: 0.88;
+}
+
+.pd-review-video {
+  width: 100%;
+  max-height: 240px;
+  border-radius: 10px;
+  background: #000;
+  display: block;
+}
+
+/* ── Lightbox ── */
+.pd-img-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.pd-img-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.pd-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.pd-lightbox-close:hover {
+  opacity: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .pd-reviews-section {
+    margin: 40px 10% 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pd-reviews-section {
+    margin: 32px 4% 48px;
+  }
+
+  .pd-reviews-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pd-reviews-title {
+    font-size: 20px;
+  }
+}
+

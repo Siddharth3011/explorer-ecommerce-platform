@@ -43,7 +43,44 @@ io.on('connection', (socket) => {
 
 connectDB();
 
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
 app.use('/images', express.static('upload/images'));
+app.use('/review-media', express.static('upload/review-media'));
+
+// Ensure review-media dir exists
+const reviewMediaDir = path.join(__dirname, 'upload', 'review-media');
+if (!fs.existsSync(reviewMediaDir)) fs.mkdirSync(reviewMediaDir, { recursive: true });
+
+const reviewMediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, reviewMediaDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `review-${Date.now()}${ext}`);
+  },
+});
+
+const reviewMediaFilter = (req, file, cb) => {
+  const allowed = /image\/(jpeg|jpg|png|webp|gif)|video\/(mp4|webm)/;
+  if (allowed.test(file.mimetype)) cb(null, true);
+  else cb(new Error('Only images and mp4/webm video files are allowed'), false);
+};
+
+const uploadReviewMedia = multer({
+  storage: reviewMediaStorage,
+  fileFilter: reviewMediaFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB cap
+});
+
+// POST /upload/review-media — returns { success, url, mediaType }
+app.post('/upload/review-media', uploadReviewMedia.single('media'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+  const mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
+  const url = `${process.env.BACKEND_URL || `http://localhost:${PORT}`}/review-media/${req.file.filename}`;
+  res.json({ success: true, url, mediaType });
+});
 
 app.get('/', (req, res) => {
   res.send('Express App is Running');
@@ -105,33 +142,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/addreview', async (req, res) => {
-  const { productId, rating, review } = req.body;
-  const product = await Product.findOne({ id: productId });
-
-  if (!product) {
-    return res.json({ success: false, message: 'Product not found' });
-  }
-
-  const newReview = { rating: Number(rating), review };
-  product.reviews.push(newReview);
-  product.numReviews = product.reviews.length;
-  product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
-
-  await product.save();
-
-  // Emit real-time update to all connected clients
-  io.emit('review_updated', {
-    productId: product.id,
-    rating: product.rating,
-    numReviews: product.numReviews,
-    latestReview: newReview,
-    topReviews: product.reviews.slice(-5).reverse(),
-  });
-
-  res.json({ success: true, message: 'Review added successfully' });
-});
-
 const fetchUser = (req, res, next) => {
   const token = req.header('auth-token');
   if (!token) {
@@ -145,6 +155,100 @@ const fetchUser = (req, res, next) => {
     return res.status(401).json({ errors: 'Please authenticate using a valid token' });
   }
 };
+
+app.post('/addreview', fetchUser, async (req, res) => {
+  try {
+    const { productId, rating, comment, mediaUrl, mediaType } = req.body;
+
+    const parsedRating = Number(rating) || 0;
+    const trimmedComment = (comment || '').trim();
+
+    // At least one of: rating, comment, or media must be provided
+    if (parsedRating === 0 && !trimmedComment && !mediaUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a rating, a comment, or an attachment.',
+      });
+    }
+
+    const product = await Product.findOne({ id: Number(productId) });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Fetch authenticated reviewer's real name
+    const reviewer = await User.findById(req.user.id).select('name');
+    const reviewerName = reviewer?.name || 'Anonymous';
+
+    // Update-or-insert: find existing review by userId
+    const existingIndex = product.reviews.findIndex(
+      (r) => r.userId && r.userId.toString() === req.user.id.toString()
+    );
+
+    const reviewPayload = {
+      userId:    req.user.id,
+      name:      reviewerName,
+      rating:    parsedRating,
+      comment:   trimmedComment,
+      mediaUrl:  mediaUrl  || '',
+      mediaType: mediaType || '',
+      date:      new Date(),
+    };
+
+    let isUpdate = false;
+    if (existingIndex !== -1) {
+      // Overwrite the existing review — no duplicates
+      product.reviews[existingIndex] = reviewPayload;
+      isUpdate = true;
+    } else {
+      product.reviews.push(reviewPayload);
+    }
+
+    // Only reviews with rating > 0 count toward the product average
+    const ratedReviews = product.reviews.filter((r) => r.rating > 0);
+    product.numReviews = product.reviews.length;
+    product.rating = ratedReviews.length > 0
+      ? ratedReviews.reduce((acc, r) => acc + r.rating, 0) / ratedReviews.length
+      : 0;
+
+    product.markModified('reviews');
+    await product.save();
+
+    const topReviews = [...product.reviews].reverse().slice(0, 5);
+
+    io.emit('review_updated', {
+      productId:    product.id,
+      rating:       product.rating,
+      numReviews:   product.numReviews,
+      latestReview: reviewPayload,
+      topReviews,
+      allReviews:   [...product.reviews].reverse(),
+    });
+
+    res.json({
+      success: true,
+      message: isUpdate ? 'Review updated successfully' : 'Review added successfully',
+    });
+  } catch (err) {
+    console.error('Add review error:', err);
+    res.status(500).json({ success: false, message: 'Server error while saving review' });
+  }
+});
+
+// Returns the list of product IDs the current user has already reviewed
+app.get('/user/reviewed-products', fetchUser, async (req, res) => {
+  try {
+    const products = await Product.find(
+      { 'reviews.userId': req.user.id },
+      { id: 1, _id: 0 }
+    );
+    const reviewedIds = products.map((p) => p.id);
+    res.json({ success: true, reviewedIds });
+  } catch (err) {
+    console.error('Reviewed products fetch error:', err);
+    res.status(500).json({ success: false, reviewedIds: [] });
+  }
+});
 
 app.post('/getuser', fetchUser, async (req, res) => {
   try {

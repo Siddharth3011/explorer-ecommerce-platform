@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Components/Toast/Toast';
@@ -6,7 +6,7 @@ import './MyOrders.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://explorer-backend.vercel.app';
 
-/* ── Star selector sub-component ── */
+/* ── Star selector ── */
 const StarSelector = ({ value, onChange }) => (
   <div className="review-stars-selector" aria-label="Star rating">
     {[1, 2, 3, 4, 5].map((star) => (
@@ -23,20 +23,66 @@ const StarSelector = ({ value, onChange }) => (
   </div>
 );
 
-/* ── Inline review drawer for a single item ── */
-const ReviewDrawer = ({ item, onClose }) => {
-  const [rating, setRating]   = useState(0);
-  const [comment, setComment] = useState('');
+/* ── Inline review drawer ── */
+const ReviewDrawer = ({ item, onClose, onReviewDone }) => {
+  const [rating, setRating]     = useState(0);
+  const [comment, setComment]   = useState('');
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
   const { showToast } = useToast();
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setMediaFile(file);
+    setMediaPreview(URL.createObjectURL(file));
+  };
+
+  const clearMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!rating) { showToast('Please select a star rating.', 'error'); return; }
-    if (!comment.trim()) { showToast('Please write a short review.', 'error'); return; }
+
+    // At least one of rating, comment, or media must be provided
+    const hasRating  = rating > 0;
+    const hasComment = comment.trim().length > 0;
+    const hasMedia   = !!mediaFile;
+    if (!hasRating && !hasComment && !hasMedia) {
+      showToast('Please add a star rating, a comment, or a photo/video.', 'error');
+      return;
+    }
 
     setSubmitting(true);
     try {
+      let mediaUrl  = '';
+      let mediaType = '';
+
+      // Step 1: upload media if attached
+      if (mediaFile) {
+        const formData = new FormData();
+        formData.append('media', mediaFile);
+        const uploadRes = await fetch(`${API_BASE}/upload/review-media`, {
+          method: 'POST',
+          headers: { 'auth-token': localStorage.getItem('auth-token') || '' },
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.success) {
+          showToast(uploadData.message || 'Media upload failed.', 'error');
+          setSubmitting(false);
+          return;
+        }
+        mediaUrl  = uploadData.url;
+        mediaType = uploadData.mediaType;
+      }
+
+      // Step 2: submit review
       const res = await fetch(`${API_BASE}/addreview`, {
         method: 'POST',
         headers: {
@@ -46,12 +92,15 @@ const ReviewDrawer = ({ item, onClose }) => {
         body: JSON.stringify({
           productId: item.productId,
           rating,
-          review: comment.trim(),
+          comment: comment.trim(),
+          mediaUrl,
+          mediaType,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        showToast('Review submitted! Thank you 🎉', 'success');
+        showToast(data.message || 'Review submitted! Thank you 🎉', 'success');
+        onReviewDone(item.productId);
         onClose();
       } else {
         showToast(data.message || 'Failed to submit review.', 'error');
@@ -62,6 +111,8 @@ const ReviewDrawer = ({ item, onClose }) => {
       setSubmitting(false);
     }
   };
+
+  const isVideo = mediaFile && mediaFile.type.startsWith('video');
 
   return (
     <motion.div
@@ -75,6 +126,7 @@ const ReviewDrawer = ({ item, onClose }) => {
       <form className="review-form" onSubmit={handleSubmit}>
         <p className="review-form-title">Rate &amp; Review: <span>{item.name}</span></p>
 
+        {/* Star rating */}
         <div className="review-form-row">
           <label className="review-form-label">Your Rating</label>
           <StarSelector value={rating} onChange={setRating} />
@@ -85,6 +137,7 @@ const ReviewDrawer = ({ item, onClose }) => {
           )}
         </div>
 
+        {/* Comment */}
         <div className="review-form-row">
           <label className="review-form-label" htmlFor={`review-comment-${item.productId}`}>
             Your Review
@@ -99,6 +152,41 @@ const ReviewDrawer = ({ item, onClose }) => {
             maxLength={500}
           />
           <p className="review-char-count">{comment.length} / 500</p>
+        </div>
+
+        {/* Media attachment */}
+        <div className="review-form-row">
+          <label className="review-form-label">Photo or Video (optional)</label>
+          <div className="review-media-row">
+            <label className="review-media-label" htmlFor={`review-media-${item.productId}`}>
+              📎 Attach file
+            </label>
+            <input
+              id={`review-media-${item.productId}`}
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/mp4,video/webm"
+              className="review-media-input"
+              onChange={handleFileChange}
+            />
+            {mediaFile && (
+              <span className="review-media-name">
+                {mediaFile.name}
+                <button type="button" className="review-media-clear" onClick={clearMedia} aria-label="Remove attachment">✕</button>
+              </span>
+            )}
+          </div>
+
+          {/* Local preview */}
+          {mediaPreview && (
+            <div className="review-media-preview">
+              {isVideo ? (
+                <video src={mediaPreview} controls className="review-preview-video" />
+              ) : (
+                <img src={mediaPreview} alt="preview" className="review-preview-img" />
+              )}
+            </div>
+          )}
         </div>
 
         <div className="review-form-actions">
@@ -118,8 +206,9 @@ const ReviewDrawer = ({ item, onClose }) => {
 export const MyOrders = () => {
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
-  // openReview key: `${orderId}-${itemIndex}` or null
-  const [openReview, setOpenReview] = useState(null);
+  const [openReview, setOpenReview]         = useState(null);
+  // Set of productIds the current user has already reviewed
+  const [reviewedProductIds, setReviewedProductIds] = useState(new Set());
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -138,6 +227,28 @@ export const MyOrders = () => {
       }
     };
     fetchOrders();
+  }, []);
+
+  // Fetch which products this user has already reviewed
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    if (!token) return;
+    fetch(`${API_BASE}/user/reviewed-products`, {
+      headers: { 'auth-token': token },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.reviewedIds)) {
+          setReviewedProductIds(new Set(data.reviewedIds));
+        }
+      })
+      .catch(() => {}); // non-critical
+  }, []);
+
+  // Called by ReviewDrawer after a successful submission
+  const handleReviewDone = useCallback((productId) => {
+    setReviewedProductIds((prev) => new Set([...prev, productId]));
+    setOpenReview(null);
   }, []);
 
   const toggleReview = useCallback((key) => {
@@ -182,8 +293,6 @@ export const MyOrders = () => {
         <div className="myorders-list">
           {orders.map((order) => (
             <div key={order._id || order.orderId} className="myorders-card">
-
-              {/* ── Order header ── */}
               <div className="myorders-card-header">
                 <div>
                   <p className="myorders-lbl">Order Placed</p>
@@ -199,11 +308,11 @@ export const MyOrders = () => {
                 </div>
               </div>
 
-              {/* ── Item rows ── */}
               <div className="myorders-card-items">
                 {order.items.map((item, idx) => {
-                  const reviewKey = `${order._id || order.orderId}-${idx}`;
-                  const isOpen    = openReview === reviewKey;
+                  const reviewKey   = `${order._id || order.orderId}-${idx}`;
+                  const isOpen      = openReview === reviewKey;
+                  const hasReviewed = reviewedProductIds.has(item.productId);
                   return (
                     <div key={idx}>
                       <div className="myorders-card-item">
@@ -213,21 +322,28 @@ export const MyOrders = () => {
                           <p>Size: {item.size} | Qty: {item.qty}</p>
                           <p className="myorders-item-price">₹{item.price.toFixed(2)}</p>
                         </div>
-                        <button
-                          className={`myorders-review-btn ${isOpen ? 'myorders-review-btn--active' : ''}`}
-                          onClick={() => toggleReview(reviewKey)}
-                          aria-expanded={isOpen}
-                        >
-                          {isOpen ? '✕ Close' : '⭐ Rate & Review'}
-                        </button>
+
+                        {hasReviewed ? (
+                          <div className="myorders-reviewed-badge" title="You have already reviewed this product">
+                            ✓ Reviewed
+                          </div>
+                        ) : (
+                          <button
+                            className={`myorders-review-btn ${isOpen ? 'myorders-review-btn--active' : ''}`}
+                            onClick={() => toggleReview(reviewKey)}
+                            aria-expanded={isOpen}
+                          >
+                            {isOpen ? '✕ Close' : '⭐ Rate & Review'}
+                          </button>
+                        )}
                       </div>
 
-                      {/* ── Animated inline review drawer ── */}
                       <AnimatePresence>
-                        {isOpen && (
+                        {isOpen && !hasReviewed && (
                           <ReviewDrawer
                             item={item}
                             onClose={() => setOpenReview(null)}
+                            onReviewDone={handleReviewDone}
                           />
                         )}
                       </AnimatePresence>
@@ -235,7 +351,6 @@ export const MyOrders = () => {
                   );
                 })}
               </div>
-
             </div>
           ))}
         </div>
