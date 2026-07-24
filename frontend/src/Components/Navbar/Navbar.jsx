@@ -5,6 +5,7 @@ import './Navbar.css';
 import logo from '../Assets/logo.png';
 import cart_icon from '../Assets/cart_icon.png';
 import { ShopContext } from '../../Context/ShopContext';
+import { useTheme } from '../../Context/ThemeContext';
 import { AuraAssistant } from '../AuraAssistant/AuraAssistant.jsx';
 
 const CATEGORY_ROUTE = { men: '/mens', women: '/womens', kid: '/kids' };
@@ -15,7 +16,8 @@ export const Navbar = () => {
   const [auraOpen, setAuraOpen] = useState(false);
   const [menuActive, setMenuActive] = useState(false);
 
-  const { getTotalCartItems, user, darkMode, setDarkMode, searchQuery, setSearchQuery, all_product } = useContext(ShopContext);
+  const { getTotalCartItems, user, searchQuery, setSearchQuery, all_product } = useContext(ShopContext);
+  const { darkMode, setDarkMode } = useTheme();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 

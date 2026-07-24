@@ -115,19 +115,28 @@ export const ProductDisplay = (props) => {
 
   // Socket.io listener for real-time review updates
   useEffect(() => {
+    const currentProductId = Number(product.id);
     socketRef.current = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
 
     socketRef.current.on('review_updated', (data) => {
-      if (data.productId !== product.id) return;
+      if (Number(data.productId) !== currentProductId) return;
       setLiveRating(data.rating);
       setLiveNumReviews(data.numReviews);
-      // Use full allReviews array when server sends it (handles update-in-place correctly)
       if (data.allReviews && data.allReviews.length > 0) {
         setLiveReviews(data.allReviews);
       } else if (data.latestReview) {
         setLiveReviews((prev) => [data.latestReview, ...prev]);
       }
-      showToast('A new review was just posted for this product!', 'info');
+      setLiveReviews((prev) => {
+        // Deduplicate by _id or name+date to avoid phantom duplicates
+        const seen = new Set();
+        return prev.filter((r) => {
+          const key = r._id || `${r.name}-${r.date}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      });
     });
 
     return () => socketRef.current?.disconnect();

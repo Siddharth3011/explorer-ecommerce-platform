@@ -9,9 +9,6 @@ const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
   const [user, setUser] = useState({ name: '', email: '', date: null, loggedIn: false });
   const [userLoading, setUserLoading] = useState(!!localStorage.getItem('auth-token'));
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -33,10 +30,6 @@ const ShopContextProvider = (props) => {
     }
   }, []);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
 
   const getUser = async (token) => {
     setUserLoading(true);
@@ -231,8 +224,6 @@ const ShopContextProvider = (props) => {
     userLoading,
     getUser,
     mergeGuestCart,
-    darkMode,
-    setDarkMode,
     wishlist,
     addToWishlist,
     removeFromWishlist,
