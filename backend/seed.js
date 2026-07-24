@@ -23,7 +23,7 @@ const seedData = async () => {
 
     arrayString = arrayString.replace(/image:\s*(p\d+_img)/g, (match, p1) => {
       const imgNum = p1.split('_')[0].replace('p', '');
-      return `image: "http://localhost:4000/images/product_${imgNum}.png"`;
+      return `image: "http://localhost:5000/images/product_${imgNum}.png"`;
     });
 
     arrayString = arrayString.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
