@@ -47,8 +47,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-app.use('/images', express.static('upload/images'));
-app.use('/review-media', express.static('upload/review-media'));
+app.use('/images', express.static(path.join(__dirname, 'upload/images')));
+app.use('/review-media', express.static(path.join(__dirname, 'upload/review-media')));
 
 // Ensure review-media dir exists
 const reviewMediaDir = path.join(__dirname, 'upload', 'review-media');
