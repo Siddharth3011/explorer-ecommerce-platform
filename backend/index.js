@@ -465,7 +465,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state items. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in context.`;
+const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state and the live product catalog provided to you. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in the catalog.`;
 
 app.post('/api/ai/chat', async (req, res) => {
   const { messages, cartItems, productContext } = req.body;
@@ -473,56 +473,102 @@ app.post('/api/ai/chat', async (req, res) => {
     return res.status(400).json({ error: 'Invalid messages array' });
   }
 
-  const cartContext = cartItems && cartItems.length > 0
-    ? `\n\nUser's current cart items: ${cartItems.map(i => `${i.name} x${i.qty} (₹${i.price})`).join(', ')}`
-    : '\n\nUser cart is currently completely empty.';
-
-  // Inject live product review context when user is on a product page
-  let productReviewContext = '';
-  if (productContext) {
-    const { name, rating, numReviews, topReviews } = productContext;
-    productReviewContext = `\n\nCurrently viewed product: "${name}"` +
-      (numReviews > 0
-        ? ` — Average rating: ${rating.toFixed(1)}/5 stars across ${numReviews} review(s).` +
-          (topReviews?.length
-            ? ` Recent customer feedback: ${topReviews.map(r => `"${r.review}" (${r.rating}★)`).join('; ')}.`
-            : '')
-        : ' — No customer reviews yet.');
-  }
-
-  const AURA_SYSTEM_EXTENDED = AURA_SYSTEM +
-    `\n\nWhen asked about a product, naturally reference its live rating score and customer sentiment from reviews. Quote specific feedback when relevant. If no reviews exist, acknowledge that and offer general advice.`;
-
-  const userText = messages[messages.length - 1]?.content || '';
-
   try {
-    const dynamicModel = ai.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: AURA_SYSTEM_EXTENDED + cartContext + productReviewContext,
+    // ── 1. Fetch live product catalog from MongoDB ──────────────────────
+    const allProducts = await Product.find(
+      {},
+      'id name category new_price old_price stock rating numReviews reviews description'
+    ).lean();
+
+    const catalogLines = allProducts.map((p) => {
+      const topReviews = (p.reviews || [])
+        .filter((r) => r.comment)
+        .slice(-3)
+        .map((r) => `"${r.comment}" (${r.rating || '?'}★ by ${r.name || 'customer'})`)
+        .join('; ');
+
+      return [
+        `• [ID:${p.id}] ${p.name}`,
+        `  Category: ${p.category}`,
+        `  Price: ₹${p.new_price} (was ₹${p.old_price})`,
+        `  Stock: ${p.stock ?? 'N/A'} units`,
+        `  Rating: ${p.numReviews > 0 ? `${p.rating.toFixed(1)}/5 (${p.numReviews} reviews)` : 'No reviews yet'}`,
+        topReviews ? `  Top reviews: ${topReviews}` : null,
+        p.description ? `  Description: ${p.description}` : null,
+      ].filter(Boolean).join('\n');
     });
 
-    try {
-      const chatHistory = messages.slice(0, -1).map((m) => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }],
-      }));
-      const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
-      const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
+    const catalogContext = allProducts.length > 0
+      ? `\n\n--- EXPLORER STORE CATALOG (${allProducts.length} products) ---\n${catalogLines.join('\n\n')}\n--- END OF CATALOG ---\n\nYou have full access to the Explorer store catalog above. Answer user queries about any product, price, stock, category, or customer review based on this live catalog data.`
+      : '\n\n(Product catalog is currently unavailable.)';
 
+    // ── 2. Cart context ─────────────────────────────────────────────────
+    const cartContext = cartItems && cartItems.length > 0
+      ? `\n\nUser's current cart: ${cartItems.map(i => `${i.name} x${i.qty} (₹${i.price})`).join(', ')}`
+      : '\n\nUser cart is currently empty.';
+
+    // ── 3. Currently viewed product context (if on a product page) ──────
+    let productReviewContext = '';
+    if (productContext) {
+      const { name, rating, numReviews, topReviews } = productContext;
+      productReviewContext = `\n\nCurrently viewed product: "${name}"` +
+        (numReviews > 0
+          ? ` — Rated ${Number(rating).toFixed(1)}/5 across ${numReviews} review(s).` +
+            (topReviews?.length
+              ? ` Highlights: ${topReviews.map(r => `"${r.comment || r.review}" (${r.rating}★)`).join('; ')}.`
+              : '')
+          : ' — No reviews yet.');
+    }
+
+    const AURA_SYSTEM_EXTENDED = AURA_SYSTEM +
+      `\n\nWhen asked about a specific product, reference its live rating and customer reviews. Quote real feedback when helpful. If no reviews exist, say so and offer general styling advice.`;
+
+    const systemInstruction = AURA_SYSTEM_EXTENDED + catalogContext + cartContext + productReviewContext;
+    const userText = messages[messages.length - 1]?.content || '';
+
+    // ── 4. Build strictly-typed, trimmed chat history (last 6 turns) ────
+    const rawHistory = messages.slice(0, -1);
+    const trimmedHistory = rawHistory.slice(-6);
+    const chatHistory = trimmedHistory
+      .filter((m) => m.role && m.content)
+      .map((m) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: String(m.content) }],
+      }));
+    // Gemini requires history to start with a 'user' turn
+    const firstUserIdx = chatHistory.findIndex((m) => m.role === 'user');
+    const validHistory = firstUserIdx !== -1 ? chatHistory.slice(firstUserIdx) : [];
+
+    const dynamicModel = ai.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction,
+    });
+
+    // ── 5. Primary: multi-turn chat ─────────────────────────────────────
+    try {
       const chat = dynamicModel.startChat({ history: validHistory });
       const result = await chat.sendMessage(userText);
-      const response = await result.response;
-      return res.json({ message: response.text() });
+      return res.json({ message: result.response.text() });
     } catch (chatError) {
-      console.warn('⚠️ Chat history session failed, activating standalone fallback:', chatError.message);
-      const standalonePrompt = `System Context: ${AURA_SYSTEM_EXTENDED}\n${cartContext}${productReviewContext}\n\nUser Message: ${userText}`;
-      const fallbackResult = await dynamicModel.generateContent(standalonePrompt);
-      const fallbackResponse = await fallbackResult.response;
-      return res.json({ message: fallbackResponse.text() });
+      console.warn('⚠️ Chat session failed, falling back to single-turn:', chatError.message);
+
+      // ── 6. Fallback: single-turn generate ──────────────────────────────
+      try {
+        const standalonePrompt = `${systemInstruction}\n\nUser: ${userText}`;
+        const fallbackResult = await dynamicModel.generateContent(standalonePrompt);
+        return res.json({ message: fallbackResult.response.text() });
+      } catch (fallbackError) {
+        console.error('⚠️ Fallback also failed:', fallbackError.message);
+        return res.json({
+          message: "I'm having a little trouble right now — please try again in a moment! 🙏",
+        });
+      }
     }
   } catch (err) {
-    console.error('CRITICAL ERROR: Total AI Layer failure:', err.stack);
-    res.status(500).json({ error: 'AI service unavailable. Please try again.' });
+    console.error('CRITICAL: AI route error:', err.message);
+    return res.json({
+      message: "Something went wrong on my end. Please try again shortly!",
+    });
   }
 });
 
