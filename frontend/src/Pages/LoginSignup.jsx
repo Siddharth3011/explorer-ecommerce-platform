@@ -13,7 +13,7 @@ export const LoginSignup = () => {
   const { getUser, mergeGuestCart, cartItems } = useContext(ShopContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const returnTo = location.state?.from?.pathname || '/';
+  const returnTo = location.state?.from?.pathname || '/shop';
 
   const changeHandler = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

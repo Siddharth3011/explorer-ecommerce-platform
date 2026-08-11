@@ -85,7 +85,7 @@ export const Navbar = () => {
         {/* ── Row 1: Logo ──────────────────────────────── */}
         <div className="nav-logo">
           <img src={logo} alt="Explorer logo" />
-          <Link to='/' onClick={() => handleNavLink('shop')}>
+          <Link to='/shop' onClick={() => handleNavLink('shop')}>
             <p>EXPLORER</p>
           </Link>
         </div>
@@ -115,7 +115,7 @@ export const Navbar = () => {
           {/* Desktop nav links — hidden on mobile via CSS */}
           <ul className="nav-menu">
             {[
-              { key: 'shop', to: '/', label: 'Shop' },
+              { key: 'shop', to: '/shop', label: 'Shop' },
               { key: 'mens', to: '/mens', label: 'Men' },
               { key: 'womens', to: '/womens', label: 'Women' },
               { key: 'kids', to: '/kids', label: 'Kids' },
