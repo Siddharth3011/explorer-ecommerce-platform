@@ -11,7 +11,7 @@ import { MyOrders } from './Pages/MyOrders';
 import { Settings } from './Pages/Settings';
 import { Wishlist } from './Pages/Wishlist';
 import { Checkout } from './Pages/Checkout';
-import { ShowcaseLanding } from './Pages/ShowcaseLanding';
+import { ShowcaseLanding } from './Pages/LandingPage';
 import { ToastProvider } from './Components/Toast/Toast';
 import { ProtectedRoute } from './Components/ProtectedRoute';
 

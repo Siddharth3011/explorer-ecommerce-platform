@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import logo from '../Components/Assets/logo.png';
 
 /* ─── Tokens ─────────────────────────────────────────────── */
 const C = {
@@ -345,9 +346,7 @@ export const ShowcaseLanding = () => {
         borderBottom: `1px solid ${C.border}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: C.grad, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>E</span>
-          </div>
+          <img src={logo} alt="Explorer logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: '-0.03em', color: C.ink }}>Explorer</span>
         </div>
 
@@ -700,9 +699,7 @@ export const ShowcaseLanding = () => {
       {/* ══ FOOTER ════════════════════════════════════════ */}
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: '28px clamp(20px,6vw,80px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 22, height: 22, borderRadius: 6, background: C.grad, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#fff', fontSize: 10, fontWeight: 800 }}>E</span>
-          </div>
+          <img src={logo} alt="Explorer logo" style={{ width: 22, height: 22, objectFit: 'contain' }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Explorer</span>
         </div>
         <p style={{ fontSize: 12, color: C.subtle }}>© 2025 Explorer · Men · Women · Kids</p>
