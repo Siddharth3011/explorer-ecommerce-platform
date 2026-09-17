@@ -1,106 +1,93 @@
-  /* ================================
-     TABLET
-     ================================ */
-
-  @media (max-width: 900px) {
-
-    .landing-nav-links {
-      display: none !important;
-    }
-
-    .landing-nav {
-      padding-left: 20px !important;
-      padding-right: 20px !important;
-    }
-
-    .landing-nav-actions {
-      gap: 7px !important;
-    }
-
-    .landing-nav-actions button {
-      padding: 9px 16px !important;
-      font-size: 13px !important;
-    }
-
-    .hero-section {
-      padding-top: 70px !important;
-    }
-
-    .hero-mockups,
-    .two-column-section,
-    .split-section {
-      grid-template-columns: 1fr !important;
-      gap: 50px !important;
-    }
-
-    .metrics-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .features-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .stack-grid {
-      grid-template-columns: 1fr !important;
-    }
-
-    .inventory-stats {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-
-    .checkout-layout {
-      flex-direction: column !important;
-    }
-
-    .checkout-payment {
-      width: 100% !important;
-    }
-  }
-
-
-  /* ================================
-     MOBILE
-     ================================ */
-
-  @media (max-width: 600px) {
-
-    .landing-nav {
-      height: 60px !important;
-      padding: 0 16px !important;
-    }
-
-    .landing-nav-actions button:first-child {
-      display: none !important;
-    }
-
-    .landing-nav-actions button {
-      padding: 8px 14px !important;
-      font-size: 12px !important;
-    }
-
-
-    /* ================================
-   MOBILE NAV
+/* ================================
+   NAVIGATION
    ================================ */
 
 .mobile-menu-btn {
   display: none;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(14, 14, 14, 0.1);
-  border-radius: 10px;
-  background: #fff;
-  color: #0E0E0E;
-  font-size: 20px;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
 }
 
 .mobile-menu {
-  display: none;
+  display: none !important;
 }
+
+
+/* ================================
+   TABLET / MOBILE NAV
+   ================================ */
+
+@media (max-width: 900px) {
+
+  .landing-nav-links {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(14, 14, 14, 0.1);
+    border-radius: 10px;
+    background: #fff;
+    color: #0E0E0E;
+    font-size: 20px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .landing-nav {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .landing-nav-actions {
+    gap: 8px !important;
+  }
+
+  .mobile-menu {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    background: #F9F7F4;
+    border-bottom: 1px solid rgba(14, 14, 14, 0.09);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-menu a {
+    padding: 16px 20px;
+    color: #0E0E0E;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(14, 14, 14, 0.06);
+  }
+}
+
+
+/* ================================
+   MOBILE
+   ================================ */
+
+@media (max-width: 600px) {
+
+  .landing-nav {
+    height: 60px !important;
+    padding: 0 16px !important;
+  }
+
+  .landing-nav-actions button:first-child {
+    display: none !important;
+  }
+
+  .landing-nav-actions button {
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+  }
 
 
 /* ================================
