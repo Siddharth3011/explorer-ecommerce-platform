@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import logo from '../Components/Assets/logo.png';
+import './LandingPage.css';
 
 /* ─── Tokens ─────────────────────────────────────────────── */
 const C = {
@@ -71,19 +72,36 @@ const SectionHead = ({ tag, title, desc, center = false }) => (
 );
 
 /* ─── Pill Button ────────────────────────────────────────── */
-const Pill = ({ children, primary, onClick, small }) => (
+const Pill = ({ children, primary, onClick, small, style = {} }) => (
   <motion.button
     whileHover={{ scale: 1.03, y: -1 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
     style={{
-      display: 'inline-flex', alignItems: 'center', gap: 8,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
       padding: small ? '9px 22px' : '14px 30px',
-      borderRadius: 100, fontSize: small ? 13 : 15, fontWeight: 600, cursor: 'pointer', border: 'none',
+      borderRadius: 100,
+      fontSize: small ? 13 : 15,
+      fontWeight: 600,
+      cursor: 'pointer',
+      border: 'none',
+      whiteSpace: 'nowrap',
       ...(primary
-        ? { background: C.grad, color: '#fff', boxShadow: '0 4px 24px rgba(124,58,237,0.35)' }
-        : { background: '#fff', color: C.ink, border: `1.5px solid ${C.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }
-      ),
+        ? {
+            background: C.grad,
+            color: '#fff',
+            boxShadow: '0 4px 24px rgba(124,58,237,0.35)',
+          }
+        : {
+            background: '#fff',
+            color: C.ink,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+          }),
+      ...style,
     }}
   >
     {children}
@@ -92,7 +110,7 @@ const Pill = ({ children, primary, onClick, small }) => (
 
 /* ─── Dark Mockup Card ───────────────────────────────────── */
 const MockupShell = ({ children, style = {} }) => (
-  <div style={{
+  <div className="mockup-shell" style={{
     background: C.dark, borderRadius: 18, overflow: 'hidden',
     border: '1px solid rgba(255,255,255,0.07)',
     boxShadow: '0 32px 80px rgba(0,0,0,0.3)', ...style,
@@ -206,7 +224,7 @@ const CheckoutMockup = () => (
   <MockupShell>
     <div style={{ padding: 24 }}>
       <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: '0.1em', marginBottom: 16 }}>SECURE CHECKOUT</p>
-      <div style={{ display: 'flex', gap: 16 }}>
+      <div className="checkout-layout" style={{ display: 'flex', gap: 16 }}>
         {/* Summary */}
         <div style={{ flex: 1 }}>
           {[['Linen Midi Dress × 1','₹1,499'],['Knit Sweater × 1','₹1,199']].map(([label,price]) => (
@@ -221,7 +239,7 @@ const CheckoutMockup = () => (
           </div>
         </div>
         {/* Payment panel */}
-        <div style={{ width: 140 }}>
+        <div className="checkout-payment" style={{ width: 140 }}>
           <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 12, marginBottom: 10 }}>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 8 }}>Pay via</p>
             {['UPI','Cards','Wallets'].map(m => (
@@ -301,7 +319,7 @@ const FAQ = ({ q, a }) => {
       style={{ borderBottom: `1px solid ${C.border}`, padding: '22px 0', cursor: 'pointer' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h4 style={{ fontSize: 16, fontWeight: 600, color: C.ink, margin: 0 }}>{q}</h4>
+        <h4 className="faq-question" style={{ fontSize: 16, fontWeight: 600, color: C.ink, margin: 0 }}>{q}</h4>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ duration: 0.25 }}
@@ -332,13 +350,14 @@ const FAQ = ({ q, a }) => {
 ══════════════════════════════════════════════════════════ */
 export const ShowcaseLanding = () => {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const base = { fontFamily: "'Inter', 'Outfit', system-ui, sans-serif", background: C.bg, color: C.ink };
 
   return (
     <div style={{ ...base, minHeight: '100vh', overflowX: 'hidden' }}>
 
       {/* ══ NAV ══════════════════════════════════════════ */}
-      <nav style={{
+      <nav className='landing-nav' style={{
         position: 'sticky', top: 0, zIndex: 100,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(20px,5vw,60px)', height: 64,
@@ -350,7 +369,7 @@ export const ShowcaseLanding = () => {
           <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: '-0.03em', color: C.ink }}>Explorer</span>
         </div>
 
-        <div style={{ display: 'flex', gap: 36 }} className="hidden md:flex">
+        <div className="landing-nav-links" style={{ display: 'flex', gap: 36 }}>
           {[['#features','Features'],['#aura','Aura AI'],['#stack','Stack'],['#faq','FAQ']].map(([href, label]) => (
             <a key={label} href={href} style={{ fontSize: 14, color: C.muted, textDecoration: 'none', fontWeight: 500 }}
               onMouseEnter={e => (e.target.style.color = C.ink)} onMouseLeave={e => (e.target.style.color = C.muted)}>
@@ -359,17 +378,58 @@ export const ShowcaseLanding = () => {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div className="landing-nav-actions" style={{
+          display: 'flex',
+          gap: 10,
+          alignItems: 'center'
+        }}>
           <Pill onClick={() => navigate('/login')}>Sign in</Pill>
-          <Pill primary onClick={() => navigate('/login')}>Get started →</Pill>
+
+          <Pill primary onClick={() => navigate('/login')}>
+            Get started →
+          </Pill>
+
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            ☰
+          </button>
         </div>
       </nav>
 
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            className="mobile-menu"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {[
+              ['#features', 'Features'],
+              ['#aura', 'Aura AI'],
+              ['#stack', 'Stack'],
+              ['#faq', 'FAQ'],
+            ].map(([href, label]) => (
+              <a
+                key={label}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {label}
+              </a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ══ HERO ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(60px,8vh,120px) clamp(20px,6vw,80px) 80px', maxWidth: 1300, margin: '0 auto' }}>
+      <section className="hero-section" style={{ padding: 'clamp(60px,8vh,120px) clamp(20px,6vw,80px) 80px', maxWidth: 1300, margin: '0 auto' }}>
         {/* Eyebrow */}
         <Reveal>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
+          <div className="hero-eyebrow" style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${C.purple}0D`, border: `1px solid ${C.purple}28`, borderRadius: 100, padding: '7px 18px' }}>
               <motion.div animate={{ opacity: [1,0.4,1] }} transition={{ duration: 1.5, repeat: Infinity }}
                 style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />
@@ -382,7 +442,7 @@ export const ShowcaseLanding = () => {
 
         {/* Headline */}
         <Reveal delay={0.06}>
-          <h1 style={{
+          <h1 className="hero-title" style={{
             fontSize: 'clamp(48px,7.5vw,88px)', fontWeight: 800, letterSpacing: '-0.04em',
             lineHeight: 1.05, textAlign: 'center', margin: '0 auto 28px', maxWidth: 900,
           }}>
@@ -396,22 +456,22 @@ export const ShowcaseLanding = () => {
 
         {/* Sub */}
         <Reveal delay={0.12}>
-          <p style={{ fontSize: 18, lineHeight: 1.75, color: C.muted, textAlign: 'center', maxWidth: 560, margin: '0 auto 40px' }}>
+          <p className="hero-description"  style={{ fontSize: 18, lineHeight: 1.75, color: C.muted, textAlign: 'center', maxWidth: 560, margin: '0 auto 40px' }}>
             Explorer is a production-grade e-commerce platform with an embedded AI shopping assistant, real-time inventory, live reviews, and seamless checkout.
           </p>
         </Reveal>
 
         {/* CTAs */}
         <Reveal delay={0.18}>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 72 }}>
+          <div className="hero-buttons" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 72 }}>
             <Pill primary onClick={() => navigate('/login')}>Explore Explorer →</Pill>
             <Pill onClick={() => navigate('/login')}>✦ Try Aura AI</Pill>
           </div>
         </Reveal>
 
         {/* Hero mockup */}
-        <Reveal delay={0.24} y={40}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 20, alignItems: 'start' }}>
+        <Reveal className="hero-mockups" delay={0.24} y={40}>
+          <div className="hero-mockups" style={{ display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 20, alignItems: 'start' }}>
             <StoreMockup />
             <AuraMockup />
           </div>
@@ -442,7 +502,7 @@ export const ShowcaseLanding = () => {
 
       {/* ══ AURA AI SECTION ═══════════════════════════════ */}
       <section id="aura" style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)', maxWidth: 1300, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+        <div className="two-column-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
           <div>
             <SectionHead
               tag="✦ Aura AI Assistant"
@@ -475,7 +535,7 @@ export const ShowcaseLanding = () => {
 
       {/* ══ CHECKOUT & REVIEWS SPLIT ══════════════════════ */}
       <section style={{ background: '#fff', padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)' }}>
-        <div style={{ maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'start' }}>
+        <div className="split-section" style={{ maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'start' }}>
           {/* Checkout */}
           <div>
             <Reveal>
@@ -514,12 +574,12 @@ export const ShowcaseLanding = () => {
 
       {/* ══ INVENTORY SECTION ════════════════════════════ */}
       <section style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)', maxWidth: 1300, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+        <div className="two-column-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
           {/* Inventory visual */}
           <Reveal y={30}>
             <MockupShell>
-              <div style={{ padding: 24 }}>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: '0.1em', marginBottom: 18 }}>ATOMIC STOCK ENGINE · MongoDB</p>
+              <div className="inventory-stat" style={{ padding: 24 }}>
+                <p  className="inventory-stat-value" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: '0.1em', marginBottom: 18 }}>ATOMIC STOCK ENGINE · MongoDB</p>
                 {/* Simulated race */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
@@ -570,7 +630,7 @@ export const ShowcaseLanding = () => {
 
       {/* ══ METRICS BAR ══════════════════════════════════ */}
       <section style={{ background: C.dark, padding: 'clamp(60px,8vh,96px) clamp(20px,6vw,80px)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden' }}>
+        <div className="metrics-grid" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden' }}>
           {[
             { val: '< 200ms', label: 'Aura AI response', note: 'Gemini 2.5 Flash' },
             { val: '100%', label: 'Stock accuracy', note: 'Atomic MongoDB writes' },
@@ -578,12 +638,12 @@ export const ShowcaseLanding = () => {
             { val: 'PCI DSS', label: 'Payment security', note: 'Razorpay compliant' },
           ].map((s, i) => (
             <Reveal key={s.label} delay={i * 0.07}>
-              <div style={{ background: C.darkCard, padding: '36px 28px' }}>
-                <p style={{ fontSize: 'clamp(26px,3vw,40px)', fontWeight: 800, letterSpacing: '-0.04em', background: C.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 8px' }}>
+              <div className="metric-card" style={{ background: C.darkCard, padding: '36px 28px' }}>
+                <p lassName="metric-value" style={{ fontSize: 'clamp(26px,3vw,40px)', fontWeight: 800, letterSpacing: '-0.04em', background: C.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 8px' }}>
                   {s.val}
                 </p>
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', margin: '0 0 5px' }}>{s.label}</p>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: 0 }}>{s.note}</p>
+                <p lassName="metric-value" style={{ fontSize: 14, fontWeight: 600, color: '#fff', margin: '0 0 5px' }}>{s.label}</p>
+                <p lassName="metric-value" style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: 0 }}>{s.note}</p>
               </div>
             </Reveal>
           ))}
@@ -593,7 +653,7 @@ export const ShowcaseLanding = () => {
       {/* ══ FEATURE GRID ══════════════════════════════════ */}
       <section id="features" style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)', maxWidth: 1300, margin: '0 auto' }}>
         <SectionHead center tag="Platform Features" title={<>Everything you need.<br /><GradText>Nothing you don't.</GradText></>} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+        <div  className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
           {[
             { icon: '✦', title: 'Aura AI Assistant', desc: 'Multi-turn Gemini 2.5 Flash chat with live catalog, cart context, and sub-200ms response.', grad: true },
             { icon: '⚡', title: 'Razorpay Checkout', desc: 'PCI DSS compliant, supports UPI, cards, wallets. One-click repeat purchase.' },
@@ -603,7 +663,7 @@ export const ShowcaseLanding = () => {
             { icon: '📦', title: 'Order Management', desc: 'Full order history, per-item review drawer, and real-time status — right inside your profile.' },
           ].map((f, i) => (
             <Reveal key={f.title} delay={i * 0.06}>
-              <motion.div
+              <motion.div  className="feature-card"
                 whileHover={{ y: -5, boxShadow: '0 16px 48px rgba(0,0,0,0.1)' }}
                 style={{
                   background: f.grad ? C.dark : C.card,
@@ -628,14 +688,14 @@ export const ShowcaseLanding = () => {
       <section id="stack" style={{ background: '#fff', padding: 'clamp(80px,10vh,100px) clamp(20px,6vw,80px)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <SectionHead center tag="Technology" title="Built on a modern, production-grade stack." />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <div className="stack-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {[
               { layer: 'Frontend', items: ['React 18', 'Framer Motion', 'Socket.io Client', 'Tailwind CSS', 'React Router v6'] },
               { layer: 'Backend', items: ['Node.js + Express', 'MongoDB + Mongoose', 'JWT Authentication', 'Multer (Media)', 'Socket.io Server'] },
               { layer: 'Platform', items: ['Gemini 2.5 Flash (AI)', 'Razorpay (Payments)', 'Vercel (Frontend)', 'Vercel (Backend)', 'GitHub CI'] },
             ].map(col => (
               <Reveal key={col.layer}>
-                <div style={{ background: C.bg, borderRadius: 16, padding: 24, border: `1px solid ${C.border}` }}>
+                <div className="stack-card" style={{ background: C.bg, borderRadius: 16, padding: 24, border: `1px solid ${C.border}` }}>
                   <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', color: C.purple, textTransform: 'uppercase', marginBottom: 16 }}>{col.layer}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {col.items.map(item => (
@@ -653,7 +713,7 @@ export const ShowcaseLanding = () => {
       </section>
 
       {/* ══ FAQ ════════════════════════════════════════════ */}
-      <section id="faq" style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)', maxWidth: 820, margin: '0 auto' }}>
+      <section id="faq" className="faq-section" style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)', maxWidth: 820, margin: '0 auto' }}>
         <SectionHead center tag="FAQ" title="Common questions." />
         {[
           ['Is this a real e-commerce platform?', "Yes. Explorer is a fully functional production-grade platform with MongoDB Atlas, Razorpay payment integration, real-time Socket.io, and Gemini AI. It's not a prototype."],
@@ -667,7 +727,7 @@ export const ShowcaseLanding = () => {
       {/* ══ FINAL CTA ═════════════════════════════════════ */}
       <section style={{ padding: 'clamp(80px,10vh,120px) clamp(20px,6vw,80px)' }}>
         <Reveal>
-          <div style={{
+          <div  className="final-cta" style={{
             maxWidth: 860, margin: '0 auto', textAlign: 'center',
             background: C.dark, borderRadius: 28, padding: 'clamp(56px,8vh,88px) 40px',
             position: 'relative', overflow: 'hidden',
@@ -685,7 +745,7 @@ export const ShowcaseLanding = () => {
               <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 36px' }}>
                 Sign up free. Let Aura guide you. Checkout in 60 seconds. Experience what modern e-commerce should feel like.
               </p>
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="final-cta-buttons" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Pill primary onClick={() => navigate('/login')}>Create free account →</Pill>
                 <Pill onClick={() => navigate('/shop')} style={{ color: '#fff', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.15)' }}>
                   Browse store
@@ -697,7 +757,7 @@ export const ShowcaseLanding = () => {
       </section>
 
       {/* ══ FOOTER ════════════════════════════════════════ */}
-      <footer style={{ borderTop: `1px solid ${C.border}`, padding: '28px clamp(20px,6vw,80px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <footer className="landing-footer" style={{ borderTop: `1px solid ${C.border}`, padding: '28px clamp(20px,6vw,80px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src={logo} alt="Explorer logo" style={{ width: 22, height: 22, objectFit: 'contain' }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Explorer</span>
