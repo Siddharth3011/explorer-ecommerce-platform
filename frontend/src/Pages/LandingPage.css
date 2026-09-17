@@ -1,6 +1,11 @@
-/* ================================
+/* =========================================================
+   LANDING PAGE RESPONSIVE STYLES
+   ========================================================= */
+
+
+/* =========================================================
    NAVIGATION
-   ================================ */
+   ========================================================= */
 
 .mobile-menu-btn {
   display: none;
@@ -11,14 +16,26 @@
 }
 
 
-/* ================================
-   TABLET / MOBILE NAV
-   ================================ */
+/* =========================================================
+   TABLET
+   ≤ 900px
+   ========================================================= */
 
 @media (max-width: 900px) {
 
+  /* ---------- NAV ---------- */
+
+  .landing-nav {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
   .landing-nav-links {
     display: none !important;
+  }
+
+  .landing-nav-actions {
+    gap: 8px !important;
   }
 
   .mobile-menu-btn {
@@ -33,15 +50,6 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
-  }
-
-  .landing-nav {
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-  }
-
-  .landing-nav-actions {
-    gap: 8px !important;
   }
 
   .mobile-menu {
@@ -66,18 +74,85 @@
     font-weight: 500;
     border-bottom: 1px solid rgba(14, 14, 14, 0.06);
   }
+
+
+  /* ---------- HERO ---------- */
+
+  .hero-section {
+    padding-top: 70px !important;
+  }
+
+  .hero-mockups {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+
+  /* ---------- TWO COLUMN SECTIONS ---------- */
+
+  .two-column-section,
+  .split-section {
+    grid-template-columns: 1fr !important;
+    gap: 50px !important;
+  }
+
+
+  /* ---------- INVENTORY ---------- */
+
+  .inventory-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+
+  /* ---------- METRICS ---------- */
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+
+  /* ---------- FEATURES ---------- */
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+
+  /* ---------- TECH STACK ---------- */
+
+  .stack-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+
+  /* ---------- CHECKOUT ---------- */
+
+  .checkout-layout {
+    flex-direction: column !important;
+  }
+
+  .checkout-payment {
+    width: 100% !important;
+  }
 }
 
 
-/* ================================
+/* =========================================================
    MOBILE
-   ================================ */
+   ≤ 600px
+   ========================================================= */
 
 @media (max-width: 600px) {
+
+  /* ---------- NAV ---------- */
 
   .landing-nav {
     height: 60px !important;
     padding: 0 16px !important;
+  }
+
+  .landing-nav-actions {
+    gap: 7px !important;
   }
 
   .landing-nav-actions button:first-child {
@@ -89,41 +164,54 @@
     font-size: 12px !important;
   }
 
-
-/* ================================
-   MOBILE MOCKUPS
-   ================================ */
-
-@media (max-width: 600px) {
-
   .mobile-menu-btn {
-    display: inline-flex;
+    width: 36px;
+    height: 36px;
   }
 
-  .mobile-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    z-index: 99;
-    background: #F9F7F4;
-    border-bottom: 1px solid rgba(14,14,14,0.09);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+  /* ---------- HERO ---------- */
+
+  .hero-section {
+    padding: 55px 16px 60px !important;
   }
 
-  .mobile-menu a {
-    padding: 16px 20px;
-    color: #0E0E0E;
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(14,14,14,0.06);
+  .hero-eyebrow {
+    margin-bottom: 28px !important;
+    text-align: center;
   }
 
-  /* FORCE hero mockups into one column */
+  .hero-eyebrow span {
+    font-size: 10px !important;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: clamp(40px, 12vw, 58px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .hero-description {
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    padding: 0 5px;
+  }
+
+  .hero-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    margin-bottom: 50px !important;
+  }
+
+  .hero-buttons button {
+    width: 100% !important;
+  }
+
+
+  /* ---------- HERO MOCKUPS ---------- */
+
   .hero-mockups {
     display: flex !important;
     flex-direction: column !important;
@@ -136,218 +224,202 @@
     min-width: 0 !important;
   }
 
+
+  /* ---------- MOCKUP ---------- */
+
+  .mockup-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 14px !important;
+  }
+
+
+  /* ---------- TECH STRIP ---------- */
+
+  .tech-strip {
+    padding: 24px 16px !important;
+  }
+
+  .tech-strip-inner {
+    gap: 18px 24px !important;
+  }
+
+  .tech-strip-inner > p {
+    width: 100%;
+    text-align: center;
+    margin: 0 !important;
+  }
+
+
+  /* =====================================================
+     IMPORTANT:
+     FORCE ALL TWO-COLUMN SECTIONS TO ONE COLUMN
+     ===================================================== */
+
+  .two-column-section,
+  .split-section {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 45px !important;
+  }
+
+  .two-column-section > *,
+  .split-section > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+
+  /* ---------- SECTION CONTENT ---------- */
+
+  .section-content {
+    width: 100%;
+  }
+
+  .section-heading {
+    margin-bottom: 36px !important;
+  }
+
+
+  /* ---------- INVENTORY ---------- */
+
+  .inventory-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .inventory-stat {
+    padding: 16px !important;
+  }
+
+  .inventory-stat-value {
+    font-size: 21px !important;
+  }
+
+
+  /* ---------- METRICS ---------- */
+
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr !important;
+    border-radius: 14px !important;
+  }
+
+  .metric-card {
+    padding: 24px 16px !important;
+  }
+
+  .metric-value {
+    font-size: 27px !important;
+  }
+
+
+  /* ---------- FEATURES ---------- */
+
+  .features-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .feature-card {
+    padding: 22px !important;
+  }
+
+
+  /* ---------- TECH STACK ---------- */
+
+  .stack-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .stack-card {
+    padding: 20px !important;
+  }
+
+
+  /* ---------- CHECKOUT ---------- */
+
+  .checkout-layout {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .checkout-payment {
+    width: 100% !important;
+  }
+
+
+  /* ---------- FAQ ---------- */
+
+  .faq-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .faq-question {
+    font-size: 15px !important;
+    padding-right: 15px;
+  }
+
+
+  /* ---------- FINAL CTA ---------- */
+
+  .final-cta {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 20px !important;
+    padding: 50px 22px !important;
+  }
+
+  .final-cta h2 {
+    font-size: clamp(30px, 9vw, 44px) !important;
+  }
+
+  .final-cta-buttons {
+    flex-direction: column !important;
+  }
+
+  .final-cta-buttons button {
+    width: 100% !important;
+  }
+
+
+  /* ---------- FOOTER ---------- */
+
+  .landing-footer {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 24px 16px !important;
+  }
 }
 
-    /* HERO */
 
-    .hero-section {
-      padding:
-        55px 16px 60px !important;
-    }
+/* =========================================================
+   VERY SMALL PHONES
+   ≤ 380px
+   ========================================================= */
 
-    .hero-eyebrow {
-      margin-bottom: 28px !important;
-      text-align: center;
-    }
+@media (max-width: 380px) {
 
-    .hero-eyebrow span {
-      font-size: 10px !important;
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    .hero-title {
-      font-size: clamp(40px, 12vw, 58px) !important;
-      line-height: 1.05 !important;
-      letter-spacing: -0.045em !important;
-    }
-
-    .hero-description {
-      font-size: 15px !important;
-      line-height: 1.65 !important;
-      padding: 0 5px;
-    }
-
-    .hero-buttons {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      margin-bottom: 50px !important;
-    }
-
-    .hero-buttons button {
-      width: 100% !important;
-    }
-
-
-    /* MOCKUPS */
-
-    .hero-mockups {
-      gap: 18px !important;
-    }
-
-    .mockup-shell {
-      border-radius: 14px !important;
-    }
-
-
-    /* TECH STRIP */
-
-    .tech-strip {
-      padding: 24px 16px !important;
-    }
-
-    .tech-strip-inner {
-      gap: 18px 24px !important;
-    }
-
-    .tech-strip-inner > p {
-      width: 100%;
-      text-align: center;
-      margin: 0 !important;
-    }
-
-
-    /* SECTIONS */
-
-    .two-column-section,
-    .split-section {
-      gap: 40px !important;
-    }
-
-    .section-content {
-      width: 100%;
-    }
-
-    .section-heading {
-      margin-bottom: 36px !important;
-    }
-
-
-    /* INVENTORY */
-
-    .inventory-stats {
-      grid-template-columns: 1fr 1fr !important;
-      gap: 10px !important;
-    }
-
-    .inventory-stat {
-      padding: 16px !important;
-    }
-
-    .inventory-stat-value {
-      font-size: 21px !important;
-    }
-
-
-    /* METRICS */
-
-    .metrics-grid {
-      grid-template-columns: 1fr 1fr !important;
-      border-radius: 14px !important;
-    }
-
-    .metric-card {
-      padding: 24px 16px !important;
-    }
-
-    .metric-value {
-      font-size: 27px !important;
-    }
-
-
-    /* FEATURES */
-
-    .features-grid {
-      grid-template-columns: 1fr !important;
-      gap: 14px !important;
-    }
-
-    .feature-card {
-      padding: 22px !important;
-    }
-
-
-    /* TECH STACK */
-
-    .stack-grid {
-      grid-template-columns: 1fr !important;
-      gap: 12px !important;
-    }
-
-    .stack-card {
-      padding: 20px !important;
-    }
-
-
-    /* FAQ */
-
-    .faq-section {
-      padding-left: 16px !important;
-      padding-right: 16px !important;
-    }
-
-    .faq-question {
-      font-size: 15px !important;
-      padding-right: 15px;
-    }
-
-
-    /* FINAL CTA */
-
-    .final-cta {
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-      border-radius: 20px !important;
-      padding: 50px 22px !important;
-    }
-
-    .final-cta h2 {
-      font-size: clamp(30px, 9vw, 44px) !important;
-    }
-
-    .final-cta-buttons {
-      flex-direction: column !important;
-    }
-
-    .final-cta-buttons button {
-      width: 100% !important;
-    }
-
-
-    /* FOOTER */
-
-    .landing-footer {
-      flex-direction: column !important;
-      text-align: center !important;
-      padding: 24px 16px !important;
-    }
+  .hero-title {
+    font-size: 38px !important;
   }
 
-
-  /* ================================
-     VERY SMALL PHONES
-     ================================ */
-
-  @media (max-width: 380px) {
-
-    .hero-title {
-      font-size: 38px !important;
-    }
-
-    .hero-section {
-      padding-left: 14px !important;
-      padding-right: 14px !important;
-    }
-
-    .metrics-grid {
-      grid-template-columns: 1fr !important;
-    }
-
-    .inventory-stats {
-      grid-template-columns: 1fr !important;
-    }
-
-    .landing-nav-actions button {
-      padding: 8px 11px !important;
-    }
+  .hero-section {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
   }
+
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inventory-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-nav-actions button {
+    padding: 8px 11px !important;
+  }
+}
