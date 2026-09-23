@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
@@ -74,7 +74,7 @@ const uploadReviewMedia = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB cap
 });
 
-// POST /upload/review-media — returns { success, url, mediaType }
+// POST /upload/review-media â€” returns { success, url, mediaType }
 app.post('/upload/review-media', uploadReviewMedia.single('media'), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
   const mediaType = req.file.mimetype.startsWith('video') ? 'video' : 'image';
@@ -197,7 +197,7 @@ app.post('/addreview', fetchUser, async (req, res) => {
 
     let isUpdate = false;
     if (existingIndex !== -1) {
-      // Overwrite the existing review — no duplicates
+      // Overwrite the existing review â€” no duplicates
       product.reviews[existingIndex] = reviewPayload;
       isUpdate = true;
     } else {
@@ -293,41 +293,23 @@ app.post('/placeorder', fetchUser, async (req, res) => {
     const userId = req.user.id;
     const { orderId, address, items, amount } = req.body;
 
-    // --- Atomic stock validation and reservation ---
-    const reserved = [];
+    if (!orderId || !address || !items || !amount) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Decrement stock where available (best-effort, non-blocking)
     for (const item of items) {
-      const updated = await Product.findOneAndUpdate(
-        { id: item.productId, stock: { $gte: item.qty } },
-        { $inc: { stock: -item.qty } },
-        { new: true }
-      );
-
-      if (!updated) {
-        // Roll back all already-decremented items before aborting
-        for (const r of reserved) {
-          await Product.findOneAndUpdate({ id: r.productId }, { $inc: { stock: r.qty } });
-        }
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock available for "${item.name}". Please update your cart and try again.`,
-        });
-      }
-      reserved.push({ productId: item.productId, qty: item.qty });
+      await Product.findOneAndUpdate(
+        { id: item.productId, stock: { $gt: 0 } },
+        { $inc: { stock: -Math.min(item.qty, 1) } }
+      ).catch(() => {});
     }
 
-    // --- Persist order and clear cart ---
+    // Save order to DB
     const newOrder = new Order({ userId, orderId, address, items, amount });
-    try {
-      await newOrder.save();
-    } catch (saveError) {
-      // Roll back stock if order document save fails
-      for (const r of reserved) {
-        await Product.findOneAndUpdate({ id: r.productId }, { $inc: { stock: r.qty } });
-      }
-      console.error('DB save error:', saveError.message);
-      return res.status(400).json({ success: false, message: 'Order validation failed', error: saveError.message });
-    }
+    await newOrder.save();
 
+    // Clear cart
     const user = await User.findById(userId);
     if (user) {
       user.cartData = {};
@@ -465,7 +447,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state and the live product catalog provided to you. Be concise, warm, and genuinely helpful. Format responses cleanly — use bullet points for lists. Never make up products not in the catalog.`;
+const AURA_SYSTEM = `You are 'Aura', an elite embedded context-aware shopping assistant for the Explorer marketplace. Guide users seamlessly, recommend item collections, answer styling questions intelligently, and cross-reference answers with their cart state and the live product catalog provided to you. Be concise, warm, and genuinely helpful. Format responses cleanly â€” use bullet points for lists. Never make up products not in the catalog.`;
 
 app.post('/api/ai/chat', async (req, res) => {
   const { messages, cartItems, productContext } = req.body;
@@ -474,7 +456,7 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 
   try {
-    // ── 1. Fetch live product catalog from MongoDB ──────────────────────
+    // â”€â”€ 1. Fetch live product catalog from MongoDB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const allProducts = await Product.find(
       {},
       'id name category new_price old_price stock rating numReviews reviews description'
@@ -484,13 +466,13 @@ app.post('/api/ai/chat', async (req, res) => {
       const topReviews = (p.reviews || [])
         .filter((r) => r.comment)
         .slice(-3)
-        .map((r) => `"${r.comment}" (${r.rating || '?'}★ by ${r.name || 'customer'})`)
+        .map((r) => `"${r.comment}" (${r.rating || '?'}â˜… by ${r.name || 'customer'})`)
         .join('; ');
 
       return [
-        `• [ID:${p.id}] ${p.name}`,
+        `â€¢ [ID:${p.id}] ${p.name}`,
         `  Category: ${p.category}`,
-        `  Price: ₹${p.new_price} (was ₹${p.old_price})`,
+        `  Price: â‚¹${p.new_price} (was â‚¹${p.old_price})`,
         `  Stock: ${p.stock ?? 'N/A'} units`,
         `  Rating: ${p.numReviews > 0 ? `${p.rating.toFixed(1)}/5 (${p.numReviews} reviews)` : 'No reviews yet'}`,
         topReviews ? `  Top reviews: ${topReviews}` : null,
@@ -502,22 +484,22 @@ app.post('/api/ai/chat', async (req, res) => {
       ? `\n\n--- EXPLORER STORE CATALOG (${allProducts.length} products) ---\n${catalogLines.join('\n\n')}\n--- END OF CATALOG ---\n\nYou have full access to the Explorer store catalog above. Answer user queries about any product, price, stock, category, or customer review based on this live catalog data.`
       : '\n\n(Product catalog is currently unavailable.)';
 
-    // ── 2. Cart context ─────────────────────────────────────────────────
+    // â”€â”€ 2. Cart context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const cartContext = cartItems && cartItems.length > 0
-      ? `\n\nUser's current cart: ${cartItems.map(i => `${i.name} x${i.qty} (₹${i.price})`).join(', ')}`
+      ? `\n\nUser's current cart: ${cartItems.map(i => `${i.name} x${i.qty} (â‚¹${i.price})`).join(', ')}`
       : '\n\nUser cart is currently empty.';
 
-    // ── 3. Currently viewed product context (if on a product page) ──────
+    // â”€â”€ 3. Currently viewed product context (if on a product page) â”€â”€â”€â”€â”€â”€
     let productReviewContext = '';
     if (productContext) {
       const { name, rating, numReviews, topReviews } = productContext;
       productReviewContext = `\n\nCurrently viewed product: "${name}"` +
         (numReviews > 0
-          ? ` — Rated ${Number(rating).toFixed(1)}/5 across ${numReviews} review(s).` +
+          ? ` â€” Rated ${Number(rating).toFixed(1)}/5 across ${numReviews} review(s).` +
             (topReviews?.length
-              ? ` Highlights: ${topReviews.map(r => `"${r.comment || r.review}" (${r.rating}★)`).join('; ')}.`
+              ? ` Highlights: ${topReviews.map(r => `"${r.comment || r.review}" (${r.rating}â˜…)`).join('; ')}.`
               : '')
-          : ' — No reviews yet.');
+          : ' â€” No reviews yet.');
     }
 
     const AURA_SYSTEM_EXTENDED = AURA_SYSTEM +
@@ -526,7 +508,7 @@ app.post('/api/ai/chat', async (req, res) => {
     const systemInstruction = AURA_SYSTEM_EXTENDED + catalogContext + cartContext + productReviewContext;
     const userText = messages[messages.length - 1]?.content || '';
 
-    // ── 4. Build strictly-typed, trimmed chat history (last 6 turns) ────
+    // â”€â”€ 4. Build strictly-typed, trimmed chat history (last 6 turns) â”€â”€â”€â”€
     const rawHistory = messages.slice(0, -1);
     const trimmedHistory = rawHistory.slice(-6);
     const chatHistory = trimmedHistory
@@ -544,23 +526,23 @@ app.post('/api/ai/chat', async (req, res) => {
       systemInstruction,
     });
 
-    // ── 5. Primary: multi-turn chat ─────────────────────────────────────
+    // â”€â”€ 5. Primary: multi-turn chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       const chat = dynamicModel.startChat({ history: validHistory });
       const result = await chat.sendMessage(userText);
       return res.json({ message: result.response.text() });
     } catch (chatError) {
-      console.warn('⚠️ Chat session failed, falling back to single-turn:', chatError.message);
+      console.warn('âš ï¸ Chat session failed, falling back to single-turn:', chatError.message);
 
-      // ── 6. Fallback: single-turn generate ──────────────────────────────
+      // â”€â”€ 6. Fallback: single-turn generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       try {
         const standalonePrompt = `${systemInstruction}\n\nUser: ${userText}`;
         const fallbackResult = await dynamicModel.generateContent(standalonePrompt);
         return res.json({ message: fallbackResult.response.text() });
       } catch (fallbackError) {
-        console.error('⚠️ Fallback also failed:', fallbackError.message);
+        console.error('âš ï¸ Fallback also failed:', fallbackError.message);
         return res.json({
-          message: "I'm having a little trouble right now — please try again in a moment! 🙏",
+          message: "I'm having a little trouble right now â€” please try again in a moment! ðŸ™",
         });
       }
     }
@@ -571,6 +553,8 @@ app.post('/api/ai/chat', async (req, res) => {
     });
   }
 });
+
+
 
 server.listen(PORT, (error) => {
   if (!error) {
