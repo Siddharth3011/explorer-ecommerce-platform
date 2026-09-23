@@ -1,11 +1,11 @@
-import React, { useContext, useState } from 'react';
+﻿import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShopContext } from '../Context/ShopContext';
 import './Checkout.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://explorer-backend.vercel.app';
-const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || 'dummy_key';
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_T78zqrAF5RKOVP';
 
 const loadScript = (src) => {
   return new Promise((resolve) => {
@@ -213,14 +213,14 @@ export const Checkout = () => {
                       <p className="checkout-item-name">{product.name}</p>
                       <p className="checkout-item-qty">Size: {size} | Qty: {qty}</p>
                     </div>
-                    <p className="checkout-item-price">₹{(product.new_price * qty).toFixed(2)}</p>
+                    <p className="checkout-item-price">â‚¹{(product.new_price * qty).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
               <div className="checkout-totals">
-                <div className="checkout-total-row"><span>Subtotal</span><span>₹{total}</span></div>
+                <div className="checkout-total-row"><span>Subtotal</span><span>â‚¹{total}</span></div>
                 <div className="checkout-total-row"><span>Shipping</span><span className="checkout-free">Free</span></div>
-                <div className="checkout-total-row checkout-total-row--bold"><span>Total</span><span>₹{total}</span></div>
+                <div className="checkout-total-row checkout-total-row--bold"><span>Total</span><span>â‚¹{total}</span></div>
               </div>
 
               <button
@@ -234,7 +234,7 @@ export const Checkout = () => {
                   'Place Order'
                 )}
               </button>
-              <p className="checkout-secure-note">🔒 Secured by 256-bit SSL encryption</p>
+              <p className="checkout-secure-note">ðŸ”’ Secured by 256-bit SSL encryption</p>
             </div>
           </motion.div>
       </AnimatePresence>
